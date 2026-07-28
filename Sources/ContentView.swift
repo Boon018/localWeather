@@ -6,78 +6,80 @@ struct ContentView: View {
     @State private var forecastData: [ForecastData] = []
     @State private var isLoading = true
     @State private var errorMessage: String? = nil
-
+    
     var body: some View {
         VStack(spacing: 20) {
             if isLoading {
                 ProgressView("Loading weather data...")
                     .padding()
-            } else if let weather = currentWeather, let errorMessage = errorMessage {
-                Text("Error: \n\n\(errorMessage)")
+            } else if let errorMessage = errorMessage {
+                Text("Error: \(errorMessage)")
                     .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+                    .padding()
             } else if let weather = currentWeather {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Current Weather")
                         .font(.title)
                         .bold()
-
+                    
                     Divider()
-
+                    
                     HStack(spacing: 20) {
                         Image(systemName: "thermometer")
                             .font(.system(size: 30))
-
+                        
                         VStack(alignment: .leading, spacing: 5) {
                             Text("Temperature")
                                 .font(.headline)
-                            Text("\(\(weather.temperature, specifier: "%.1f")°C)")
+                            Text("\(weather.temperature, specifier: "%.1f")°C")
                                 .font(.title)
                         }
                     }
-
+                    
                     HStack(spacing: 20) {
                         Image(systemName: "humidity")
                             .font(.system(size: 30))
-
+                        
                         VStack(alignment: .leading, spacing: 5) {
                             Text("Humidity")
                                 .font(.headline)
-                            Text("\(\(weather.humidity, specifier: "%.1f")%)")
+                            Text("\(weather.humidity, specifier: "%.1f")%")
                                 .font(.title)
                         }
                     }
-
+                    
                     HStack(spacing: 20) {
                         Image(systemName: "wind")
                             .font(.system(size: 30))
-
+                        
                         VStack(alignment: .leading, spacing: 5) {
                             Text("Wind Speed")
                                 .font(.headline)
-                            Text("\(\(weather.windSpeed, specifier: "%.1f") m/s)")
+                            Text("\(weather.windSpeed, specifier: "%.1f") m/s")
                                 .font(.title)
                         }
                     }
-
+                    
                     HStack(spacing: 20) {
                         Image(systemName: "cloud.rain")
                             .font(.system(size: 30))
-
+                        
                         VStack(alignment: .leading, spacing: 5) {
                             Text("Rain Sum (Past 24h)")
                                 .font(.headline)
-                            Text("\(\(weather.rainSum, specifier: "%.1f") mm)")
+                            Text("\(weather.rainSum, specifier: "%.1f") mm")
                                 .font(.title)
                         }
                     }
-
+                    
                     Divider()
-
+                    
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Radar Data")
                             .font(.title)
                             .bold()
-
+                        
                         if let radar = radarData {
                             AsyncImage(url: URL(string: radar.radarImageURL)) { image in
                                 image.resizable()
@@ -92,9 +94,9 @@ struct ContentView: View {
                                 .foregroundColor(.gray)
                         }
                     }
-
+                    
                     Divider()
-
+                    
                     ForecastView(forecastData: forecastData)
                 }
                 .padding()
@@ -109,7 +111,7 @@ struct ContentView: View {
             fetchForecastData()
         }
     }
-
+    
     private func fetchWeatherData() {
         WeatherService.fetchCurrentWeather { result in
             DispatchQueue.main.async {
@@ -119,13 +121,13 @@ struct ContentView: View {
                     self.errorMessage = nil
                 case .failure(let error):
                     self.currentWeather = nil
-                    self.errorMessage = error.localizedDescription
+                    self.errorMessage = "Failed to fetch current weather: \(error.localizedDescription)"
                 }
                 self.isLoading = false
             }
         }
     }
-
+    
     private func fetchRadarData() {
         RadarService.fetchRadarData { result in
             DispatchQueue.main.async {
@@ -134,11 +136,13 @@ struct ContentView: View {
                     self.radarData = radar
                 case .failure(let error):
                     print("Error fetching radar data: \(error.localizedDescription)")
+                    // Continue without radar data - not critical for the app to function
+                    self.radarData = nil
                 }
             }
         }
     }
-
+    
     private func fetchForecastData() {
         ForecastService.fetchDailyForecast { result in
             DispatchQueue.main.async {
@@ -147,6 +151,8 @@ struct ContentView: View {
                     self.forecastData = forecasts
                 case .failure(let error):
                     print("Error fetching forecast data: \(error.localizedDescription)")
+                    // Continue without forecast data - not critical for the app to function
+                    self.forecastData = []
                 }
             }
         }

@@ -2,49 +2,51 @@ import Foundation
 
 struct ForecastService {
     static func fetchDailyForecast(completion: @escaping (Result<[ForecastData], Error>) -> Void) {
-        // Example URL for Open-Meteo API (daily forecast)
-        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=47.3667&longitude=9.5&daily=temperature_2m_max,temperature_2m_min,rain_sum"
-
+        // Alpine coordinates - Chamonix, France (example Alpine location)
+        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=45.9237&longitude=6.8655&daily=temperature_2m_max,temperature_2m_min,rain_sum"
+        
         guard let url = URL(string: urlString) else {
             completion(.failure(ForecastError.invalidURL))
             return
         }
-
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
             }
-
+            
             guard let httpResponse = response as? HTTPURLResponse else {
                 completion(.failure(ForecastError.invalidResponse))
                 return
             }
-
+            
             guard (200...299).contains(httpResponse.statusCode) else {
                 completion(.failure(ForecastError.httpError(statusCode: httpResponse.statusCode)))
                 return
             }
-
+            
             guard let data = data else {
                 completion(.failure(ForecastError.noData))
                 return
             }
-
+            
             do {
                 let decoder = JSONDecoder()
                 let forecastResponse = try decoder.decode(OpenMeteoForecastResponse.self, from: data)
                 let forecastData = processForecastResponse(forecastResponse)
                 completion(.success(forecastData))
             } catch {
+                // Provide more specific error information to help with debugging
+                print("JSON decoding error in ForecastService: \(error)")
                 completion(.failure(error))
             }
         }.resume()
     }
-
+    
     private static func processForecastResponse(_ response: OpenMeteoForecastResponse) -> [ForecastData] {
         var forecastList = [ForecastData]()
-
+        
         for (index, daily) in response.daily.enumerated() {
             let date = Date(timeIntervalSince1970: TimeInterval(daily.time!))
             let forecast = ForecastData(
@@ -55,7 +57,7 @@ struct ForecastService {
             )
             forecastList.append(forecast)
         }
-
+        
         return forecastList
     }
 }

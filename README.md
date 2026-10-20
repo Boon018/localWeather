@@ -1,4 +1,23 @@
-# Alpenwetter — first working prototype
+# Alpenwetter 1.1 — local iPhone fixes (20 October 2026)
+
+Use the standalone `index.html` or the existing private HTTPS link. Main-screen search accepts a town/postcode or decimal `latitude, longitude` (for example `47.07, 15.44`). Saved places are selectable on the same screen. GPS remains subject to iPhone browser permissions; blocked/denied requests now give a visible fallback message and a bounded timeout.
+
+Changes in this update:
+
+- Hourly cards now show **both precipitation amount (mm/h or inches/h) and probability**. Daily expanded cards use the same display. The main weather metrics include hourly precipitation; hourly details identify precipitation and rain as hourly amounts. These are hourly accumulations, not instantaneous rain-rate measurements; precipitation includes snow water equivalent.
+- Radar survives returning to the page and normal forecast refreshes. Fetch errors are shown inside the radar card. Image load/error handlers are installed before starting image requests; a visible timeout handles images that never finish. The coverage mask cannot completely obscure the radar. A late response from another location is discarded. An external radar-map link is always available. There is still no geographic basemap in the embedded image.
+- Cache reads now prefer a newer in-memory value after a quota failure, instead of returning an older disk value. Cache clearing/retention includes memory-only entries. Invalid persisted forecasts are rejected safely.
+- **Settings → Check local cache** tests actual browser disk read/write, validates the saved forecast and reports whether a marker from an earlier page session was recovered. The diagnostic bypasses the in-memory cache.
+
+To verify on this iPhone: load a location online, run the cache check, close and reopen **the same file**, then enable Airplane Mode and tap Refresh. The saved forecast should remain, labelled offline. A renamed/copied file, Private Browsing or a different browser can use a different storage area. [Storage behavior for file URLs is browser-dependent](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
+
+Validation: both `node tests/test.cjs` and `node tests/regressions.cjs` pass. The new suite uses isolated JavaScript sessions with shared simulated persistent storage and covers reload persistence, offline restart, refresh failures, quota overwrite, corrupt cache recovery, main-screen controls, hourly amount plus probability, radar persistence/load errors/location races and GPS fallback. Live RainViewer metadata and both image types returned HTTP 200, valid PNG bytes and CORS `*` with `Origin: null`. No live iPhone/Firefox browser session is available in this environment; on-device storage/GPS and visual verification remain necessary. An image that loads but has no precipitation colours is explicitly distinguished from a network failure.
+
+The source bundle includes both test suites. No credentials, tokens or personal cached data are included. Optional PWA support remains opt-in.
+
+---
+
+# Original prototype documentation
 
 Open the supplied private HTTPS testing link in Safari on your iPhone. Tap ⌖ for a one-time location request, or Places to search. Graz is the initial default. No developer account, API key, build, installation or weather-app login is required. The private testing host uses your existing ChatGPT access.
 

@@ -1,3 +1,5 @@
+# localWeather
+
 # Alpenwetter 1.1 — local iPhone fixes (20 October 2026)
 
 Use the standalone `index.html` or the existing private HTTPS link. Main-screen search accepts a town/postcode or decimal `latitude, longitude` (for example `47.07, 15.44`). Saved places are selectable on the same screen. GPS remains subject to iPhone browser permissions; blocked/denied requests now give a visible fallback message and a bounded timeout.

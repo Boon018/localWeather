@@ -30,6 +30,9 @@ playground.xcworkspace
 # .swiftpm
 
 .build/
+node_modules/
+test-results/
+playwright-report/
 
 # CocoaPods
 #

@@ -19,9 +19,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Run regression suites
-        run: npm test
+      - name: Install pinned development tools
+        run: npm ci
       - name: Build standalone artifacts
         run: npm run build
       - name: Check generated artifact parity
         run: npm run check:artifact
+      - name: Run regression suites
+        run: npm test
+      - name: Install browser test engines
+        run: npx playwright install --with-deps chromium webkit
+      - name: Test phone, tablet and desktop layouts
+        run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-failure-traces
+          path: test-results/

@@ -1,15 +1,22 @@
 {
   "name": "alpenwetter",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Local-first weather application for Austria",
   "type": "module",
   "scripts": {
     "test": "node tests/test.cjs && node tests/regressions.cjs && node tests/modules.cjs",
     "build": "node scripts/build.mjs",
-    "check:artifact": "node scripts/check-artifact.mjs"
+    "check:artifact": "node scripts/check-artifact.mjs",
+    "test:browser": "playwright test"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "acorn": "8.19.0",
+    "esbuild": "0.28.2",
+    "prettier": "3.9.10"
   }
 }

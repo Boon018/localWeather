@@ -29,14 +29,20 @@ jobs:
         with:
           node-version: 20
 
-      - name: Run regression tests
-        run: npm test
+      - name: Install pinned development tools
+        run: npm ci
 
       - name: Build production artifacts
         run: npm run build
 
       - name: Verify standalone artifact and storage-safe paths
         run: npm run check:artifact
+      - name: Run regression tests
+        run: npm test
+      - name: Install test browsers
+        run: npx playwright install --with-deps chromium webkit
+      - name: Run browser tests
+        run: npm run test:browser
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

@@ -1,6 +1,4 @@
-import { wind } from "../ui/format.js";
 import { Store } from "../storage/storage.js";
-import { radar } from "../radar/legacy.js";
 export const DEFAULT = {
   name: "Graz",
   latitude: 47.0707,
@@ -31,6 +29,8 @@ export const state = {
   histBusy: false,
   compare: null,
   radar: null,
+  radarOpened: false,
+  radarMap: null,
   radarIndex: 0,
   radarBusy: false,
   radarError: "",

@@ -1,5 +1,5 @@
 import { state } from "./state.js";
-import { radar } from "../radar/legacy.js";
+import { radar } from "../ui/radarView.js";
 import { Store } from "../storage/storage.js";
 import { loadWeather } from "../weather/forecast.js";
 import { status } from "../ui/status.js";
@@ -24,6 +24,7 @@ export function selectLocation(l) {
   state.view = "weather";
   state.search = [];
   loadWeather();
+  if (state.radarOpened) radar();
 }
 export function locationMessage(text) {
   state.gpsMessage = text;

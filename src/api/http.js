@@ -1,4 +1,3 @@
-import { status } from "../ui/status.js";
 export async function json(url, params = {}, timeout = 18000) {
   const u = new URL(url);
   Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));

@@ -1,6 +1,21 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#122c43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="description" content="Private, local-first weather for Austria. Forecasts, model comparisons and historical weather."><meta name="alpenwetter-version" content="1.2.1"><title>Alpenwetter</title>
-<style>:root {
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#122c43" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="description"
+      content="Private, local-first weather for Austria. Forecasts, model comparisons and historical weather."
+    />
+    <meta name="alpenwetter-version" content="1.2.2" />
+    <title>Alpenwetter</title>
+    <style>
+      :root {
   color-scheme: dark;
   --bg: #0a1b2a;
   --card: #142d41;
@@ -12,7 +27,117 @@
   --warn: #ffd28b;
   --shadow: 0 10px 30px #00000016;
 }
-.weather-columns > div { min-width: 0; }
+.radar-widget {
+  min-width: 0;
+}
+.radar-widget .radarbox {
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  margin: 16px auto;
+}
+.radar-widget .map-surface {
+  cursor: grab;
+  user-select: none;
+}
+.radar-widget .map-surface.dragging {
+  cursor: grabbing;
+}
+.radar-widget .map-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.radar-widget .map-layer img {
+  position: absolute;
+  object-fit: fill;
+}
+.radar-widget .map-marker {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #163c56;
+  border: 3px solid white;
+  box-shadow: 0 1px 4px #0008;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.radar-widget .map-compass {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  color: #132e42;
+  font-size: 22px;
+  text-shadow: 0 1px 2px white;
+  pointer-events: none;
+}
+.radar-widget .map-tools {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 6px;
+}
+.radar-widget .map-tools button {
+  padding: 3px;
+  border-radius: 10px;
+  background: #ffffffe6;
+  color: #17354d;
+  border: 1px solid #17354d55;
+  font-size: 22px;
+  line-height: 1;
+}
+.radar-widget .radarbox {
+  width: 100%;
+  max-width: none;
+  min-height: 280px;
+  aspect-ratio: 1;
+}
+.radar-widget .map-surface {
+  touch-action: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #d9e5eb;
+}
+.radar-widget .map-layer img {
+  inset: auto;
+  max-width: none;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+.radar-widget .map-tools button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.radar-widget .map-attribution {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 4px 8px;
+  color: #172e42;
+  background: #ffffffe6;
+  font-size: 12px;
+  z-index: 4;
+}
+.radar-widget .map-attribution a {
+  color: #075c75;
+}
+.radar-widget .radar-controls {
+  align-items: center;
+}
+.radar-widget .radar-controls label {
+  flex: 1;
+  min-width: 140px;
+}
+.radar-widget .map-surface:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -4px;
+}
+.weather-columns > div {
+  min-width: 0;
+}
 * {
   box-sizing: border-box;
 }
@@ -450,47 +575,6 @@ label {
   background: var(--accent);
   margin: 10px 0;
 }
-.radarbox {
-  position: relative;
-  background: #d9e5eb;
-  border-radius: 15px;
-  overflow: hidden;
-  aspect-ratio: 1;
-  max-width: 512px;
-  margin: 16px auto;
-}
-.radarbox img {
-  width: 100%;
-  position: absolute;
-  inset: 0;
-}
-.radarbox .center {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: #163c56;
-  color: white;
-  border: 2px solid white;
-  border-radius: 50%;
-  width: 12px;
-  height: 12px;
-  z-index: 3;
-}
-.radarbox .compass {
-  position: absolute;
-  right: 12px;
-  top: 10px;
-  color: #132e42;
-  z-index: 3;
-}
-.radarbox .gridlines {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(transparent 49.8%, #3453 50%, transparent 50.2%),
-    linear-gradient(90deg, transparent 49.8%, #3453 50%, transparent 50.2%);
-}
 .footnote {
   font-size: 13px;
   color: var(--muted);
@@ -542,103 +626,128 @@ label {
   }
 }
 
-.radarbox .basemap {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: #d9e5eb;
-}
-.radarbox .basemap img {
-  position: absolute;
-  width: 256px;
-  height: 256px;
-  max-width: none;
-  inset: auto;
-  object-fit: cover;
-}
-.radarbox > #radarImage {
-  opacity: 0.76;
-  mix-blend-mode: multiply;
-}
-.radarbox > #radarCoverage {
-  opacity: 0.16 !important;
-  mix-blend-mode: normal;
-}
+    </style>
+  <meta name="alpenwetter-build" content="4c9331e48a7b"></head>
+  <body data-theme="auto">
+    <header>
+      <div>
+        <div class="brand">
+          Alpenwetter <span class="small">v1.2.2</span>
+        </div>
+        <h1 id="locationTitle">Graz</h1>
+      </div>
+      <div class="header-actions">
+        <button class="iconbutton" id="gps" aria-label="Use my location">
+          ⌖</button
+        ><button class="iconbutton" id="refresh" aria-label="Refresh weather">
+          ↻
+        </button>
+      </div>
+    </header>
+    <div id="status" class="status" role="status" aria-live="polite">
+      Opening your weather…
+    </div>
+    <main class="page" id="main"></main>
+    <nav aria-label="Main navigation" id="nav"></nav>
 
-.map-surface {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: #d9e5eb;
-  touch-action: none;
-  cursor: grab;
-  user-select: none;
-}
-.map-surface.dragging {
-  cursor: grabbing;
-}
-.map-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.map-layer img {
-  position: absolute;
-  width: 256px;
-  height: 256px;
-  max-width: none;
-  object-fit: cover;
-}
-.map-layer.radar-tiles img {
-  opacity: 0.76;
-  mix-blend-mode: multiply;
-}
-.map-marker {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #163c56;
-  border: 3px solid white;
-  box-shadow: 0 1px 4px #0008;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.map-compass {
-  position: absolute;
-  right: 12px;
-  top: 10px;
-  color: #132e42;
-  font-size: 22px;
-  text-shadow: 0 1px 2px #fff;
-  pointer-events: none;
-}
-.map-tools {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  display: flex;
-  gap: 6px;
-}
-.map-tools button {
-  min-height: 38px;
-  width: 38px;
-  padding: 3px;
-  border-radius: 10px;
-  background: #ffffffd9;
-  color: #17354d;
-  border: 1px solid #17354d55;
-  font-size: 22px;
-  line-height: 1;
-}
-.map-tools button:last-child {
-  font-size: 18px;
-}
-</style><meta name="alpenwetter-build" content="f5ce2bc54f6b"></head><body data-theme="auto"><header><div><div class="brand">Alpenwetter <span class="small">v1.2.1</span></div><h1 id="locationTitle">Graz</h1></div><div class="header-actions"><button class="iconbutton" id="gps" aria-label="Use my location">⌖</button><button class="iconbutton" id="refresh" aria-label="Refresh weather">↻</button></div></header><div id="status" class="status" role="status" aria-live="polite">Opening your weather…</div><main class="page" id="main"></main><nav aria-label="Main navigation" id="nav"></nav>
+    <script>
+      (() => {
+  // src/storage/storage.js
+  var Store = {
+    prefix: "alpen.v1.",
+    memory: /* @__PURE__ */ new Map(),
+    blocked: false,
+    get(k, f = null) {
+      if (this.memory.has(k)) return this.memory.get(k);
+      try {
+        const raw = localStorage.getItem(this.prefix + k);
+        return raw === null ? f : JSON.parse(raw);
+      } catch {
+        this.blocked = true;
+        return f;
+      }
+    },
+    set(k, v) {
+      this.memory.set(k, v);
+      try {
+        localStorage.setItem(this.prefix + k, JSON.stringify(v));
+        return true;
+      } catch {
+        this.blocked = true;
+        return false;
+      }
+    },
+    keys() {
+      let disk = [];
+      try {
+        disk = Object.keys(localStorage).filter((k) => k.startsWith(this.prefix)).map((k) => k.slice(this.prefix.length));
+      } catch {
+        this.blocked = true;
+      }
+      return [.../* @__PURE__ */ new Set([...disk, ...this.memory.keys()])];
+    },
+    remove(k) {
+      this.memory.delete(k);
+      try {
+        localStorage.removeItem(this.prefix + k);
+      } catch {
+        this.blocked = true;
+      }
+    },
+    clear() {
+      this.keys().forEach((k) => this.remove(k));
+    }
+  };
+  var priorCacheProbe = Store.get("persistenceProbe");
+  Store.set("persistenceProbe", {
+    writtenAt: Date.now(),
+    id: Math.random().toString(36).slice(2)
+  });
 
+  // src/app/state.js
+  var DEFAULT = {
+    name: "Graz",
+    latitude: 47.0707,
+    longitude: 15.4395,
+    country: "Austria",
+    timezone: "Europe/Vienna"
+  };
+  var settings = Object.assign(
+    {
+      theme: "auto",
+      temperature: "celsius",
+      wind: "kmh",
+      precipitation: "mm",
+      refresh: 30,
+      defaultLocation: null
+    },
+    Store.get("settings", {})
+  );
+  var state = {
+    location: settings.defaultLocation || Store.get("location", DEFAULT),
+    view: "weather",
+    data: null,
+    busy: false,
+    seq: 0,
+    error: "",
+    history: null,
+    histDate: "",
+    histBusy: false,
+    compare: null,
+    radar: null,
+    radarOpened: false,
+    radarMap: null,
+    radarIndex: 0,
+    radarBusy: false,
+    radarError: "",
+    radarRequest: 0,
+    gpsMessage: "",
+    search: [],
+    chartVar: "temperature_2m",
+    chartHours: 48,
+    warnings: null
+  };
 
-
-<script>(() => {
   // src/ui/format.js
   var $ = (id) => document.getElementById(id);
   var finite = (v) => typeof v === "number" && Number.isFinite(v);
@@ -694,58 +803,6 @@ label {
     return ["\u26C8\uFE0F", "Thunderstorm"];
   }
 
-  // src/storage/storage.js
-  var Store = {
-    prefix: "alpen.v1.",
-    memory: /* @__PURE__ */ new Map(),
-    blocked: false,
-    get(k, f = null) {
-      if (this.memory.has(k)) return this.memory.get(k);
-      try {
-        const raw = localStorage.getItem(this.prefix + k);
-        return raw === null ? f : JSON.parse(raw);
-      } catch {
-        this.blocked = true;
-        return f;
-      }
-    },
-    set(k, v) {
-      this.memory.set(k, v);
-      try {
-        localStorage.setItem(this.prefix + k, JSON.stringify(v));
-        return true;
-      } catch {
-        this.blocked = true;
-        return false;
-      }
-    },
-    keys() {
-      let disk = [];
-      try {
-        disk = Object.keys(localStorage).filter((k) => k.startsWith(this.prefix)).map((k) => k.slice(this.prefix.length));
-      } catch {
-        this.blocked = true;
-      }
-      return [.../* @__PURE__ */ new Set([...disk, ...this.memory.keys()])];
-    },
-    remove(k) {
-      this.memory.delete(k);
-      try {
-        localStorage.removeItem(this.prefix + k);
-      } catch {
-        this.blocked = true;
-      }
-    },
-    clear() {
-      this.keys().forEach((k) => this.remove(k));
-    }
-  };
-  var priorCacheProbe = Store.get("persistenceProbe");
-  Store.set("persistenceProbe", {
-    writtenAt: Date.now(),
-    id: Math.random().toString(36).slice(2)
-  });
-
   // src/ui/locationsView.js
   function locationControls() {
     const fav = Store.get("favorites", []);
@@ -791,21 +848,6 @@ label {
   }
   function sumComplete(rows, k) {
     return rows.length && rows.every((r) => finite(r[k])) ? rows.reduce((s, r) => s + r[k], 0) : null;
-  }
-
-  // src/ui/status.js
-  function status(message, error = false) {
-    $("status").textContent = message;
-    $("status").className = "status" + (error ? " error" : "");
-  }
-  function updated() {
-    if (state.error) return status(state.error, true);
-    if (state.data) {
-      const age = Date.now() - state.data.savedAt;
-      status(
-        (!navigator.onLine ? "Offline \xB7 " : age > settings.refresh * 6e4 ? "Cached \xB7 " : "") + "Updated " + time(state.data.savedAt / 1e3) + (age > 864e5 ? " \xB7 " + time(state.data.savedAt / 1e3, { day: "numeric", month: "short" }) : "") + (Store.blocked ? " \xB7 Device storage unavailable" : "")
-      );
-    }
   }
 
   // src/api/http.js
@@ -1042,8 +1084,8 @@ label {
 
   // src/api/geoSphere.js
   async function loadWarnings(l, seq, force = false) {
-    const cached = Store.get("warnings:" + key(l));
-    if (cached && !force && Date.now() - cached.savedAt < 15 * 6e4) return;
+    const cached2 = Store.get("warnings:" + key(l));
+    if (cached2 && !force && Date.now() - cached2.savedAt < 15 * 6e4) return;
     if (!navigator.onLine) return;
     try {
       const raw = await json(
@@ -1069,7 +1111,7 @@ label {
       if (state.view === "weather") render();
     } catch {
       if (seq === state.seq) {
-        state.warnings = cached ? { ...cached, failed: true } : { failed: true };
+        state.warnings = cached2 ? { ...cached2, failed: true } : { failed: true };
         if (state.view === "weather") render();
       }
     }
@@ -1088,9 +1130,535 @@ label {
     ).join("") : w?.savedAt && !stale ? '<p class="muted">No active or upcoming warnings returned for this municipality at the last check.</p>' : '<p class="muted">Current warning status unavailable. Check the official map.</p>') + '<a href="https://warnungen.zamg.at/" target="_blank" rel="noreferrer" style="display:inline-block;padding:12px 0">Open official warning map \u2197</a><p class="footnote">GeoSphere Austria \xB7 CC BY 4.0. Local weather can change between checks. This feed is not a continuous alert service.</p></section>';
   }
 
+  // src/api/rainViewer.js
+  var cached = null;
+  var pending = null;
+  var savedAt = 0;
+  function normalizeRadar(data) {
+    const host = new URL(data?.host);
+    if (host.protocol !== "https:" || !["tilecache.rainviewer.com", "tilecache.rainviewer.net"].includes(
+      host.hostname
+    ) || host.username || host.password || host.port)
+      throw Error("Unexpected radar host");
+    const unique = /* @__PURE__ */ new Map();
+    for (const f of Array.isArray(data?.radar?.past) ? data.radar.past : [])
+      if (f && Number.isFinite(f.time) && f.time > 0 && typeof f.path === "string" && /^\/v2\/radar\/[\w-]+$/.test(f.path))
+        unique.set(f.time, { time: f.time, path: f.path });
+    const frames = [...unique.values()].sort((a, b) => a.time - b.time).slice(-24);
+    if (!frames.length) throw Error("No past radar frames returned");
+    return { host: host.origin, frames };
+  }
+  async function radarMetadata() {
+    if (cached && Date.now() - savedAt < 3e5) return cached;
+    if (!pending)
+      pending = json("https://api.rainviewer.com/public/weather-maps.json").then(normalizeRadar).then((data) => {
+        cached = data;
+        savedAt = Date.now();
+        return data;
+      }).finally(() => {
+        pending = null;
+      });
+    return pending;
+  }
+
+  // src/radar/projection.js
+  var TILE_SIZE = 256;
+  var MIN_LATITUDE = -85.05112878;
+  var MAX_LATITUDE = 85.05112878;
+  function worldPoint(latitude, longitude, zoom) {
+    const n = 2 ** zoom;
+    const lat = Math.max(MIN_LATITUDE, Math.min(MAX_LATITUDE, Number(latitude)));
+    const radians = lat * Math.PI / 180;
+    return {
+      x: (Number(longitude) + 180) / 360 * n * TILE_SIZE,
+      y: (1 - Math.asinh(Math.tan(radians)) / Math.PI) / 2 * n * TILE_SIZE
+    };
+  }
+  function wrapTileX(x, zoom) {
+    const n = 2 ** zoom;
+    return (x % n + n) % n;
+  }
+  function normalizedPoint(latitude, longitude) {
+    const p = worldPoint(latitude, longitude, 0);
+    return { x: p.x / TILE_SIZE, y: p.y / TILE_SIZE };
+  }
+  function wrapDelta(delta) {
+    return delta - Math.round(delta);
+  }
+  function constrainView(view) {
+    view.x = (view.x % 1 + 1) % 1;
+    view.y = Math.max(0, Math.min(1, view.y));
+    view.z = Math.max(3, Math.min(12, view.z));
+    return view;
+  }
+  function screenPoint(point, view, width, height) {
+    const size = TILE_SIZE * 2 ** view.z;
+    return {
+      x: width / 2 + wrapDelta(point.x - view.x) * size,
+      y: height / 2 + (point.y - view.y) * size
+    };
+  }
+  function anchorAt(view, x, y, width, height) {
+    const size = TILE_SIZE * 2 ** view.z;
+    return {
+      x: view.x + (x - width / 2) / size,
+      y: view.y + (y - height / 2) / size
+    };
+  }
+  function placeAnchor(view, anchor, x, y, width, height, zoom) {
+    const z = Math.max(3, Math.min(12, zoom)), size = TILE_SIZE * 2 ** z;
+    return constrainView(
+      Object.assign(view, {
+        z,
+        x: anchor.x - (x - width / 2) / size,
+        y: anchor.y - (y - height / 2) / size
+      })
+    );
+  }
+  function visibleTiles(view, width, height, maxNativeZoom = 12) {
+    const z = Math.min(Math.floor(view.z), maxNativeZoom), n = 2 ** z;
+    const size = TILE_SIZE * 2 ** (view.z - z);
+    const originX = view.x * n * size - width / 2;
+    const originY = view.y * n * size - height / 2;
+    const out = [];
+    for (let y = Math.max(0, Math.floor(originY / size)); y < Math.min(n, Math.ceil((originY + height) / size)); y++) {
+      for (let x = Math.floor(originX / size); x < Math.ceil((originX + width) / size); x++) {
+        out.push({
+          z,
+          x: wrapTileX(x, z),
+          y,
+          key: `${z}/${x}/${y}`,
+          left: x * size - originX,
+          top: y * size - originY,
+          size
+        });
+      }
+    }
+    return out;
+  }
+
+  // src/radar/layers.js
+  var TileLayer = class {
+    constructor(element, onChange, nativeZoom) {
+      this.element = element;
+      this.onChange = onChange;
+      this.nativeZoom = nativeZoom;
+      this.tiles = /* @__PURE__ */ new Map();
+      this.alive = true;
+    }
+    update(view, width, height, urlFor) {
+      const wanted = /* @__PURE__ */ new Set();
+      for (const tile of visibleTiles(view, width, height, this.nativeZoom)) {
+        const url = urlFor(tile);
+        if (!url) continue;
+        const id = tile.key + "|" + url;
+        wanted.add(id);
+        let entry = this.tiles.get(id);
+        if (!entry) {
+          const image = document.createElement("img");
+          image.alt = "";
+          image.draggable = false;
+          image.decoding = "async";
+          image.referrerPolicy = "strict-origin-when-cross-origin";
+          entry = { image, status: "loading", timer: null };
+          this.tiles.set(id, entry);
+          const complete = (ok) => {
+            if (!this.alive || this.tiles.get(id) !== entry || entry.status !== "loading")
+              return;
+            clearTimeout(entry.timer);
+            entry.status = ok ? "loaded" : "error";
+            image.style.visibility = ok ? "visible" : "hidden";
+            this.onChange();
+          };
+          image.onload = () => complete(true);
+          image.onerror = () => complete(false);
+          entry.timer = setTimeout(() => complete(false), 12e3);
+          image.src = url;
+          this.element.append(image);
+        }
+        Object.assign(entry.image.style, {
+          left: tile.left + "px",
+          top: tile.top + "px",
+          width: tile.size + "px",
+          height: tile.size + "px"
+        });
+      }
+      for (const [id, entry] of this.tiles)
+        if (!wanted.has(id)) {
+          clearTimeout(entry.timer);
+          entry.image.onload = entry.image.onerror = null;
+          entry.image.remove();
+          this.tiles.delete(id);
+        }
+    }
+    counts() {
+      const result = { loading: 0, error: 0, loaded: 0 };
+      for (const tile of this.tiles.values()) result[tile.status]++;
+      return result;
+    }
+    destroy() {
+      this.alive = false;
+      for (const tile of this.tiles.values()) {
+        clearTimeout(tile.timer);
+        tile.image.onload = tile.image.onerror = null;
+        tile.image.remove();
+      }
+      this.tiles.clear();
+    }
+  };
+
+  // src/radar/controls.js
+  function installGestures(surface, view, draw) {
+    const pointers = /* @__PURE__ */ new Map();
+    let gesture = null;
+    const position = (e) => {
+      const r = surface.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+    const dimensions = () => ({
+      width: surface.clientWidth,
+      height: surface.clientHeight
+    });
+    function reset() {
+      const p = [...pointers.values()];
+      if (!p.length) {
+        gesture = null;
+        return;
+      }
+      const mid = p.length > 1 ? { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 } : p[0];
+      const { width, height } = dimensions();
+      gesture = {
+        anchor: anchorAt(view, mid.x, mid.y, width, height),
+        zoom: view.z,
+        distance: p.length > 1 ? Math.max(1, Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y)) : 0
+      };
+    }
+    surface.onpointerdown = (e) => {
+      if (e.button !== 0 || e.target.closest("button, a, input")) return;
+      pointers.set(e.pointerId, position(e));
+      try {
+        surface.setPointerCapture(e.pointerId);
+      } catch {
+      }
+      reset();
+      surface.classList.add("dragging");
+    };
+    surface.onpointermove = (e) => {
+      if (!pointers.has(e.pointerId) || !gesture) return;
+      pointers.set(e.pointerId, position(e));
+      const p = [...pointers.values()];
+      const mid = p.length > 1 ? { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 } : p[0];
+      const distance = p.length > 1 ? Math.max(1, Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y)) : 0;
+      const z = gesture.distance ? gesture.zoom + Math.log2(distance / gesture.distance) : gesture.zoom;
+      const { width, height } = dimensions();
+      placeAnchor(view, gesture.anchor, mid.x, mid.y, width, height, z);
+      draw();
+    };
+    const end = (e) => {
+      pointers.delete(e.pointerId);
+      reset();
+      if (!pointers.size) surface.classList.remove("dragging");
+    };
+    surface.onpointerup = surface.onpointercancel = surface.onlostpointercapture = end;
+    const wheel = (e) => {
+      e.preventDefault();
+      const p = position(e), { width, height } = dimensions();
+      placeAnchor(
+        view,
+        anchorAt(view, p.x, p.y, width, height),
+        p.x,
+        p.y,
+        width,
+        height,
+        view.z + (e.deltaY < 0 ? 0.5 : -0.5)
+      );
+      draw();
+    };
+    surface.addEventListener("wheel", wheel, { passive: false });
+    surface.onkeydown = (e) => {
+      if (e.target !== surface) return;
+      const step = 80 / (256 * 2 ** view.z);
+      const delta = {
+        ArrowLeft: [-step, 0],
+        ArrowRight: [step, 0],
+        ArrowUp: [0, -step],
+        ArrowDown: [0, step]
+      }[e.key];
+      if (delta) {
+        e.preventDefault();
+        view.x += delta[0];
+        view.y += delta[1];
+        constrainView(view);
+        draw();
+      }
+      if (["+", "=", "-"].includes(e.key)) {
+        e.preventDefault();
+        view.z = Math.max(3, Math.min(12, view.z + (e.key === "-" ? -1 : 1)));
+        draw();
+      }
+    };
+    return () => {
+      surface.removeEventListener("wheel", wheel);
+      surface.onpointerdown = surface.onpointermove = surface.onpointerup = surface.onpointercancel = surface.onlostpointercapture = surface.onkeydown = null;
+      pointers.clear();
+    };
+  }
+
+  // src/radar/map.js
+  var RadarMap = class {
+    constructor(view, getData, setFrame, formatTime) {
+      this.view = view;
+      this.getData = getData;
+      this.setFrame = setFrame;
+      this.formatTime = formatTime;
+      this.playing = false;
+      this.disposed = false;
+      this.raf = 0;
+      this.element = document.createElement("div");
+      this.element.className = "radar-widget";
+      this.element.innerHTML = `<div class="radarbox"><div class="map-surface" tabindex="0" role="region" aria-label="Weather radar map. Drag or use arrow keys to pan; plus and minus to zoom.">
+   <div class="map-layer base-tiles"></div><div class="map-layer radar-tiles"></div>
+   <span class="map-marker" role="img" aria-label="Selected location"></span><span class="map-compass">N \u2191</span>
+   <div class="map-tools"><button type="button" data-map="out" aria-label="Zoom out">\u2212</button><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="center" aria-label="Center selected location">\u2316</button></div>
+   <div class="map-attribution">\xA9 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> \xB7 <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer</a></div>
+  </div></div><div class="radar-controls actions"><button type="button" class="radar-play" aria-pressed="false">\u25B6 Play</button><label>Overlay opacity <input class="range" type="range" min="0" max="100" value="76" aria-label="Radar overlay opacity"></label></div>
+  <input id="radarTime" class="range" type="range" min="0" max="0" value="0" aria-label="Radar time">
+  <p id="radarLabel" class="small" role="status" aria-live="polite"></p>
+  <p class="footnote">Past radar, not a forecast. The timestamp identifies the composite frame; individual observations may be older. Blue/green \u2192 yellow/red: increasing reflectivity. Blank areas can mean no precipitation or missing coverage.</p>`;
+      this.surface = this.element.querySelector(".map-surface");
+      this.base = new TileLayer(
+        this.element.querySelector(".base-tiles"),
+        () => this.status(),
+        12
+      );
+      this.rain = new TileLayer(
+        this.element.querySelector(".radar-tiles"),
+        () => this.status(),
+        7
+      );
+      this.removeGestures = installGestures(
+        this.surface,
+        view,
+        () => this.schedule()
+      );
+      this.element.querySelector('[data-map="out"]').onclick = () => {
+        view.z = Math.max(3, view.z - 1);
+        this.schedule();
+      };
+      this.element.querySelector('[data-map="in"]').onclick = () => {
+        view.z = Math.min(12, view.z + 1);
+        this.schedule();
+      };
+      this.element.querySelector('[data-map="center"]').onclick = () => {
+        Object.assign(
+          view,
+          normalizedPoint(
+            this.getData().location.latitude,
+            this.getData().location.longitude
+          )
+        );
+        this.schedule();
+      };
+      this.playButton = this.element.querySelector(".radar-play");
+      this.playButton.onclick = () => this.play(!this.playing);
+      this.timeline = this.element.querySelector("#radarTime");
+      this.timeline.oninput = () => {
+        this.play(false);
+        this.setFrame(+this.timeline.value);
+        this.update();
+      };
+      const opacity = this.element.querySelector(
+        '[aria-label="Radar overlay opacity"]'
+      );
+      opacity.value = String(view.opacity ?? 76);
+      opacity.oninput = () => {
+        view.opacity = +opacity.value;
+        this.rain.element.style.opacity = String(view.opacity / 100);
+      };
+      this.visibility = () => {
+        if (document.hidden) this.play(false);
+      };
+      document.addEventListener("visibilitychange", this.visibility);
+      this.resize = new ResizeObserver(() => this.schedule());
+      this.resize.observe(this.surface);
+    }
+    attach(host) {
+      if (this.element.parentElement !== host) host.append(this.element);
+      this.update();
+    }
+    schedule() {
+      if (!this.raf && !this.disposed)
+        this.raf = requestAnimationFrame(() => {
+          this.raf = 0;
+          this.update();
+        });
+    }
+    update() {
+      if (this.disposed || !this.element.isConnected) return;
+      const { location: location2, radar: radar2, index } = this.getData();
+      const width = this.surface.clientWidth, height = this.surface.clientHeight;
+      if (!width || !height) return;
+      const frame = radar2?.frames[index];
+      this.timeline.disabled = !frame;
+      this.playButton.disabled = !frame;
+      this.timeline.max = String(Math.max(0, (radar2?.frames.length || 1) - 1));
+      this.timeline.value = String(index || 0);
+      this.base.update(
+        this.view,
+        width,
+        height,
+        (t) => locationProtocol() === "file:" ? "" : `https://tile.openstreetmap.org/${t.z}/${t.x}/${t.y}.png`
+      );
+      this.rain.update(
+        this.view,
+        width,
+        height,
+        (t) => frame ? `${radar2.host}${frame.path}/256/${t.z}/${t.x}/${t.y}/2/1_1.png` : ""
+      );
+      this.rain.element.style.opacity = String((this.view.opacity ?? 76) / 100);
+      const pixel = screenPoint(
+        normalizedPoint(location2.latitude, location2.longitude),
+        this.view,
+        width,
+        height
+      );
+      const marker = this.element.querySelector(".map-marker");
+      marker.style.left = pixel.x + "px";
+      marker.style.top = pixel.y + "px";
+      marker.title = location2.name;
+      this.surface.dataset.zoom = String(this.view.z);
+      this.surface.dataset.center = JSON.stringify({
+        x: this.view.x,
+        y: this.view.y
+      });
+      this.status();
+    }
+    status() {
+      if (this.disposed) return;
+      const { location: location2, radar: radar2, index, busy, error } = this.getData();
+      const frame = radar2?.frames[index];
+      const b = this.base.counts(), r = this.rain.counts();
+      let message = location2.name + " \xB7 ";
+      if (frame) {
+        message += this.formatTime(frame.time) + " \xB7 ";
+        if (Date.now() / 1e3 - frame.time > 1800)
+          message += "Older radar frame \xB7 ";
+      }
+      message += busy ? "Refreshing radar\u2026" : !frame ? error ? "Radar unavailable." : "No radar frame." : r.loading ? "Loading radar tiles\u2026" : r.error ? `Radar partly unavailable (${r.error} tiles).` : r.loaded ? "Radar tiles loaded." : "Radar coverage unavailable.";
+      if (b.error) message += " Basemap partly unavailable.";
+      if (locationProtocol() === "file:")
+        message += " Street map requires the HTTPS app.";
+      this.element.querySelector("#radarLabel").textContent = message;
+    }
+    play(on) {
+      clearTimeout(this.timer);
+      this.playing = on;
+      this.playButton.textContent = on ? "\u275A\u275A Pause" : "\u25B6 Play";
+      this.playButton.setAttribute("aria-pressed", String(on));
+      if (on)
+        this.timer = setTimeout(() => {
+          if (this.disposed || !this.element.isConnected || document.hidden) {
+            this.play(false);
+            return;
+          }
+          const { radar: radar2, index } = this.getData();
+          if (radar2?.frames.length && !this.rain.counts().loading) {
+            this.setFrame((index + 1) % radar2.frames.length);
+            this.update();
+          }
+          this.play(true);
+        }, 1e3);
+    }
+    destroy() {
+      this.play(false);
+      this.disposed = true;
+      cancelAnimationFrame(this.raf);
+      this.resize.disconnect();
+      this.removeGestures();
+      document.removeEventListener("visibilitychange", this.visibility);
+      this.base.destroy();
+      this.rain.destroy();
+      this.element.remove();
+    }
+  };
+  function locationProtocol() {
+    return window.location.protocol;
+  }
+
+  // src/ui/radarView.js
+  var widget = null;
+  function radarContent() {
+    const link = '<p class="footnote"><a href="https://www.rainviewer.com/weather-radar-map-live.html" target="_blank" rel="noreferrer">Open RainViewer radar map \u2197</a></p>';
+    if (!state.radarOpened)
+      return '<p class="muted">Load recent precipitation around ' + esc(state.location.name) + ". Map and radar providers receive tile requests only when you open this map.</p>" + link;
+    return (state.radarError ? '<p class="notice warning" role="alert">' + esc(state.radarError) + "</p>" : "") + '<div id="radarMount"></div>' + link;
+  }
+  function radarImages() {
+    const host = document.getElementById("radarMount");
+    if (!host || !host.append || !state.radarOpened) {
+      if (widget) {
+        widget.destroy();
+        widget = null;
+      }
+      return;
+    }
+    const locationKey = key(state.location);
+    if (widget && widget.view.locationKey !== locationKey) {
+      widget.destroy();
+      widget = null;
+    }
+    if (!state.radarMap || state.radarMap.locationKey !== locationKey)
+      state.radarMap = {
+        locationKey,
+        ...normalizedPoint(state.location.latitude, state.location.longitude),
+        z: 7,
+        opacity: 76
+      };
+    if (!widget)
+      widget = new RadarMap(
+        state.radarMap,
+        () => ({
+          location: state.location,
+          radar: state.radar,
+          index: state.radarIndex,
+          busy: state.radarBusy,
+          error: state.radarError
+        }),
+        (index) => {
+          state.radarIndex = index;
+        },
+        time
+      );
+    widget.attach(host);
+  }
+  async function radar() {
+    if (state.radarBusy) return;
+    const request = ++state.radarRequest, locationKey = key(state.location);
+    state.radarOpened = true;
+    state.radarBusy = true;
+    state.radarError = "";
+    render();
+    try {
+      const data = await radarMetadata();
+      if (request !== state.radarRequest || locationKey !== key(state.location))
+        return;
+      state.radar = { ...data, locationKey };
+      state.radarIndex = data.frames.length - 1;
+    } catch {
+      if (request === state.radarRequest)
+        state.radarError = "Radar could not load. The map is still usable; try again later. Existing frames may be old.";
+    } finally {
+      if (request === state.radarRequest) {
+        state.radarBusy = false;
+        if (state.view === "weather") render();
+      }
+    }
+  }
+
   // src/ui/weatherView.js
   function weatherView() {
-    if (!state.data) return locationControls() + empty();
+    if (!state.data)
+      return locationControls() + empty() + '<section class="card"><h2>Weather radar</h2><button data-action="radar">Load radar</button>' + radarContent() + "</section>";
     const data = state.data, rs = upcoming(), h = rs[0] || {}, c = data.current || h, days = daily(data.rows), today = days.find((d) => d.date === dateKey(Date.now() / 1e3)) || days[0], co = condition(c.weather_code, c.is_day);
     const ai = data.astro?.time?.findIndex((t) => dateKey(t) === today?.date) ?? -1;
     return locationControls() + '<div class="weather-columns"><div><section class="hero"><div class="condition-icon">' + co[0] + '</div><div class="temperature">' + temp(c.temperature_2m) + '</div><div class="condition">' + co[1] + '</div><p class="muted">Feels like ' + temp(c.apparent_temperature) + " \xB7 H " + temp(today?.high) + " / L " + temp(today?.low) + '</p><div class="pill">' + (data.current ? "Current model estimate \xB7 " + time(c.time) : "Hourly consensus estimate") + '</div></section><section class="card"><div class="sectionhead"><h2>Next 24 hours</h2><button data-view="hourly">Details</button></div>' + hourstrip(rs.slice(0, 24)) + "<small>Temperature & rainfall amount: consensus. Conditions & probability: Open-Meteo Best Match.</small></section>" + warningsCard() + '<section class="card"><div class="sectionhead"><h2>Weather radar</h2><button data-action="radar">' + (state.radarBusy ? "Loading\u2026" : state.radar ? "Refresh" : "Load radar") + "</button></div>" + radarContent() + '</section></div><div><section class="card days"><div class="sectionhead"><h2>' + days.length + '-day outlook</h2><span class="tag">Tap a day</span></div>' + days.map(
@@ -1525,6 +2093,21 @@ label {
     setTimeout(() => URL.revokeObjectURL(url), 1e3);
   }
 
+  // src/ui/status.js
+  function status(message, error = false) {
+    $("status").textContent = message;
+    $("status").className = "status" + (error ? " error" : "");
+  }
+  function updated() {
+    if (state.error) return status(state.error, true);
+    if (state.data) {
+      const age = Date.now() - state.data.savedAt;
+      status(
+        (!navigator.onLine ? "Offline \xB7 " : age > settings.refresh * 6e4 ? "Cached \xB7 " : "") + "Updated " + time(state.data.savedAt / 1e3) + (age > 864e5 ? " \xB7 " + time(state.data.savedAt / 1e3, { day: "numeric", month: "short" }) : "") + (Store.blocked ? " \xB7 Device storage unavailable" : "")
+      );
+    }
+  }
+
   // src/weather/forecast.js
   async function loadWeather(force = false) {
     const seq = ++state.seq, l = { ...state.location }, candidate = Store.get("forecast:" + key(l)), cache = validCache(candidate, l) ? candidate : null, changed = state.data && key(state.data.location) !== key(l);
@@ -1613,6 +2196,7 @@ label {
     state.view = "weather";
     state.search = [];
     loadWeather();
+    if (state.radarOpened) radar();
   }
   function locationMessage(text) {
     state.gpsMessage = text;
@@ -1788,257 +2372,6 @@ label {
       drawChart();
   }
 
-  // src/radar/legacy.js
-  function radarContent() {
-    const link = '<p><a href="https://www.rainviewer.com/weather-radar-map-live.html" target="_blank" rel="noreferrer">Open RainViewer radar map \u2197</a></p>';
-    const error = state.radarError ? '<div class="notice warning" role="alert">' + esc(state.radarError) + "</div>" : "";
-    if (!state.radar)
-      return error + '<p class="muted">' + (state.radarBusy ? "Fetching radar frames\u2026" : "Tap Load radar to fetch recent precipitation around " + esc(state.location.name) + ".") + "</p>" + link + '<p class="footnote">RainViewer \xB7 Internet required. A local-file browser may block this provider; the external map remains available.</p>';
-    const f = state.radar.frames[state.radarIndex];
-    return error + '<div class="radarbox"><div class="gridlines"></div><img id="radarImage" alt="Precipitation radar centred on selected location" referrerpolicy="no-referrer"><img id="radarCoverage" alt="Radar coverage mask" referrerpolicy="no-referrer" style="opacity:.35"><span class="center"></span><span class="compass">N \u2191</span></div><input id="radarTime" class="range" type="range" min="0" max="' + (state.radar.frames.length - 1) + '" value="' + state.radarIndex + '" aria-label="Radar time"><p id="radarLabel" class="small" role="status">Loading radar image\u2026</p>' + link + '<p class="footnote">' + esc(state.location.name) + ' is at the centre dot; north is up. This image has no street map. Dark mask = missing coverage. A blank image can mean no detected precipitation or missing radar data; it is not an all-clear. Blue/green \u2192 yellow/red means increasing radar reflectivity. <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer</a> \xB7 ' + esc(new Date(f.time * 1e3).toLocaleDateString()) + "</p>";
-  }
-  function normalizeRadar(d) {
-    const host = new URL(d.host);
-    if (host.protocol !== "https:" || !["tilecache.rainviewer.com", "tilecache.rainviewer.net"].includes(
-      host.hostname
-    ))
-      throw Error("Unexpected radar host");
-    const frames = d.radar?.past?.filter(
-      (f) => finite(f.time) && /^\/v2\/radar\/[\w-]+$/.test(f.path)
-    );
-    if (!frames?.length) throw Error("No radar frames returned");
-    return { host: host.origin, frames: frames.sort((a, b) => a.time - b.time) };
-  }
-  async function radar() {
-    if (state.radarBusy) return;
-    const request = ++state.radarRequest, l = { ...state.location };
-    state.radarBusy = true;
-    state.radarError = "";
-    render();
-    try {
-      const d = normalizeRadar(
-        await json("https://api.rainviewer.com/public/weather-maps.json")
-      );
-      if (request !== state.radarRequest || key(l) !== key(state.location))
-        return;
-      state.radar = { ...d, locationKey: key(l) };
-      state.radarIndex = d.frames.length - 1;
-    } catch (e) {
-      if (request === state.radarRequest)
-        state.radarError = "Radar could not load (" + (e.name === "AbortError" ? "request timed out" : e.message) + "). Try Refresh or open the radar map below. Local-file browser restrictions can also block this request.";
-    } finally {
-      if (request === state.radarRequest) {
-        state.radarBusy = false;
-        if (state.view === "weather") render();
-      }
-    }
-  }
-  function radarImages() {
-    const img = $("radarImage"), mask = $("radarCoverage");
-    if (!img || !mask || !state.radar) return;
-    const f = state.radar.frames[state.radarIndex], tail = "/512/7/" + Number(state.location.latitude).toFixed(4) + "/" + Number(state.location.longitude).toFixed(4), url = state.radar.host + f.path + tail + "/2/1_1.png";
-    if (img.dataset.url === url) return;
-    img.dataset.url = url;
-    let imageState = "loading", coverageState = "loading";
-    const label = () => {
-      if ($("radarImage") !== img || img.dataset.url !== url) return;
-      const age = (Date.now() / 1e3 - f.time) / 60;
-      let message = time(f.time) + " \xB7 " + state.location.name + " \xB7 ";
-      if (imageState === "error")
-        message += "Radar image failed to load. Use the external map below.";
-      else if (imageState === "loading") message += "Loading radar image\u2026";
-      else message += "Radar image loaded.";
-      if (coverageState === "error")
-        message += " Coverage mask unavailable; coverage is unknown.";
-      if (age > 30)
-        message += " Older frame (" + Math.round(age) + " minutes ago).";
-      $("radarLabel").textContent = message;
-    };
-    const timer = setTimeout(() => {
-      if (imageState === "loading") {
-        imageState = "error";
-        label();
-      }
-    }, 15e3);
-    img.onload = () => {
-      clearTimeout(timer);
-      imageState = "loaded";
-      label();
-    };
-    img.onerror = () => {
-      clearTimeout(timer);
-      imageState = "error";
-      label();
-    };
-    mask.onload = () => {
-      coverageState = "loaded";
-      label();
-    };
-    mask.onerror = () => {
-      coverageState = "error";
-      mask.style.display = "none";
-      label();
-    };
-    label();
-    img.src = url;
-    mask.src = state.radar.host + "/v2/coverage/0" + tail + "/0/0_0.png";
-  }
-  function radarWorld(lat, lon, z) {
-    const n = 2 ** z, r = Math.max(-85.0511, Math.min(85.0511, Number(lat))) * Math.PI / 180;
-    return {
-      x: (Number(lon) + 180) / 360 * n * 256,
-      y: (1 - Math.asinh(Math.tan(r)) / Math.PI) / 2 * n * 256
-    };
-  }
-  function radarTileURL(frame, z, x, y) {
-    const n = 2 ** z, wrapped = (x % n + n) % n;
-    if (y < 0 || y >= n) return "";
-    return state.radar.host + frame.path + "/256/" + z + "/" + wrapped + "/" + y + "/2/1_1.png";
-  }
-  function renderInteractiveRadar() {
-    const image = $("radarImage"), box = image?.closest(".radarbox") || document.querySelector(".radarbox");
-    if (!box || !state.radar) return;
-    const locationKey = key(state.location);
-    if (!state.radarMap || state.radarMap.locationKey !== locationKey)
-      state.radarMap = { locationKey, z: 7, panX: 0, panY: 0 };
-    let map = state.radarMap, surface = box.querySelector(".map-surface");
-    if (!surface) {
-      box.innerHTML = '<div class="map-surface"><div class="map-layer base-tiles"></div><div class="map-layer radar-tiles"></div><span class="map-marker"></span><span class="map-compass">N \u2191</span><div class="map-tools"><button type="button" aria-label="Zoom out">\u2212</button><button type="button" aria-label="Zoom in">+</button><button type="button" aria-label="Center selected location">\u2316</button></div></div>';
-      surface = box.querySelector(".map-surface");
-      const tools = surface.querySelectorAll(".map-tools button");
-      tools[0].onclick = (e) => {
-        e.stopPropagation();
-        map.z = Math.max(5, map.z - 1);
-        map.panX = 0;
-        map.panY = 0;
-        renderInteractiveRadar();
-      };
-      tools[1].onclick = (e) => {
-        e.stopPropagation();
-        map.z = Math.min(10, map.z + 1);
-        map.panX = 0;
-        map.panY = 0;
-        renderInteractiveRadar();
-      };
-      tools[2].onclick = (e) => {
-        e.stopPropagation();
-        map.panX = 0;
-        map.panY = 0;
-        renderInteractiveRadar();
-      };
-      let drag = null;
-      surface.onpointerdown = (e) => {
-        if (e.target.closest("button")) return;
-        drag = { x: e.clientX, y: e.clientY, px: map.panX, py: map.panY };
-        surface.classList.add("dragging");
-        surface.setPointerCapture?.(e.pointerId);
-      };
-      surface.onpointermove = (e) => {
-        if (!drag) return;
-        map.panX = drag.px + e.clientX - drag.x;
-        map.panY = drag.py + e.clientY - drag.y;
-        renderInteractiveRadar();
-      };
-      surface.onpointerup = surface.onpointercancel = () => {
-        drag = null;
-        surface.classList.remove("dragging");
-      };
-      surface.onwheel = (e) => {
-        e.preventDefault();
-        map.z = Math.max(5, Math.min(10, map.z + (e.deltaY < 0 ? 1 : -1)));
-        map.panX = 0;
-        map.panY = 0;
-        renderInteractiveRadar();
-      };
-    }
-    const size = box.clientWidth || 512, center = radarWorld(
-      state.location.latitude,
-      state.location.longitude,
-      map.z
-    ), viewX = center.x - map.panX, viewY = center.y - map.panY, topX = Math.floor(viewX / 256) - 3, topY = Math.floor(viewY / 256) - 3, base = surface.querySelector(".base-tiles"), radarLayer = surface.querySelector(".radar-tiles"), frame = state.radar.frames[state.radarIndex];
-    base.innerHTML = "";
-    radarLayer.innerHTML = "";
-    for (let ty = topY; ty <= topY + 7; ty++)
-      for (let tx = topX; tx <= topX + 7; tx++) {
-        const left = tx * 256 - viewX + size / 2, top = ty * 256 - viewY + size / 2;
-        const mapTile = document.createElement("img");
-        mapTile.alt = "";
-        mapTile.loading = "lazy";
-        mapTile.decoding = "async";
-        mapTile.referrerPolicy = "no-referrer";
-        mapTile.src = "https://tile.openstreetmap.org/" + map.z + "/" + (tx % 2 ** map.z + 2 ** map.z) % 2 ** map.z + "/" + ty + ".png";
-        mapTile.style.left = left + "px";
-        mapTile.style.top = top + "px";
-        base.append(mapTile);
-        const radarURL = radarTileURL(frame, map.z, tx, ty);
-        if (radarURL) {
-          const radarTile = document.createElement("img");
-          radarTile.alt = "";
-          radarTile.loading = "lazy";
-          radarTile.decoding = "async";
-          radarTile.referrerPolicy = "no-referrer";
-          radarTile.src = radarURL;
-          radarTile.style.left = left + "px";
-          radarTile.style.top = top + "px";
-          radarLayer.append(radarTile);
-        }
-      }
-    const marker = surface.querySelector(".map-marker");
-    marker.style.left = size / 2 + map.panX + "px";
-    marker.style.top = size / 2 + map.panY + "px";
-    const label = $("radarLabel");
-    if (label)
-      label.textContent = time(frame.time) + " \xB7 " + state.location.name + " \xB7 Radar map loaded.";
-    const note = box.parentElement?.querySelector(".footnote");
-    if (note)
-      note.innerHTML = esc(state.location.name) + ' is initially centred at the dot. Drag to pan, use +/\u2212 to zoom, or tap \u2316 to recenter. Map \xA9 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors. Rain overlay: <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer</a> \xB7 ' + esc(new Date(frame.time * 1e3).toLocaleDateString());
-  }
-  radarImages = function() {
-    renderInteractiveRadar();
-  };
-
-  // src/app/state.js
-  var DEFAULT = {
-    name: "Graz",
-    latitude: 47.0707,
-    longitude: 15.4395,
-    country: "Austria",
-    timezone: "Europe/Vienna"
-  };
-  var settings = Object.assign(
-    {
-      theme: "auto",
-      temperature: "celsius",
-      wind: "kmh",
-      precipitation: "mm",
-      refresh: 30,
-      defaultLocation: null
-    },
-    Store.get("settings", {})
-  );
-  var state = {
-    location: settings.defaultLocation || Store.get("location", DEFAULT),
-    view: "weather",
-    data: null,
-    busy: false,
-    seq: 0,
-    error: "",
-    history: null,
-    histDate: "",
-    histBusy: false,
-    compare: null,
-    radar: null,
-    radarIndex: 0,
-    radarBusy: false,
-    radarError: "",
-    radarRequest: 0,
-    gpsMessage: "",
-    search: [],
-    chartVar: "temperature_2m",
-    chartHours: 48,
-    warnings: null
-  };
-
   // src/main.js
   document.addEventListener("click", (e) => {
     const b = e.target.closest("button");
@@ -2169,162 +2502,8 @@ label {
     normalizeRadar
   };
   if (!window.__ALPEN_TEST__) loadWeather();
-  (function() {
-    const api = window.Alpen;
-    if (!api || !api.state) return;
-    const MIN_Z = 5, MAX_Z = 10;
-    const world = (lat, lon, z) => {
-      const n = 2 ** z, r = Math.max(-85.0511, Math.min(85.0511, Number(lat))) * Math.PI / 180;
-      return {
-        x: (Number(lon) + 180) / 360 * n * 256,
-        y: (1 - Math.asinh(Math.tan(r)) / Math.PI) / 2 * n * 256
-      };
-    };
-    const sizeOf = (s) => s.clientWidth || 512;
-    function zoomAt(map, box, clientX, clientY, next) {
-      const size = sizeOf(box), rect = box.getBoundingClientRect(), px = clientX - rect.left, py = clientY - rect.top;
-      const old = world(
-        api.state.location.latitude,
-        api.state.location.longitude,
-        map.z
-      ), oldView = { x: old.x - map.panX, y: old.y - map.panY };
-      const wx = oldView.x + px - size / 2, wy = oldView.y + py - size / 2, nz = Math.max(MIN_Z, Math.min(MAX_Z, next));
-      if (nz === map.z) return;
-      const scale = 2 ** (nz - map.z), center = world(
-        api.state.location.latitude,
-        api.state.location.longitude,
-        nz
-      );
-      map.z = nz;
-      map.panX = center.x - (wx * scale - px + size / 2);
-      map.panY = center.y - (wy * scale - py + size / 2);
-      api.radarImages();
-    }
-    function ensureControls(box, surface) {
-      const parent = box.parentElement;
-      if (!parent) return;
-      let controls = parent.querySelector(".radar-controls");
-      if (!controls) {
-        controls = document.createElement("div");
-        controls.className = "radar-controls actions";
-        controls.style.marginTop = "10px";
-        controls.innerHTML = '<button type="button" class="radar-play" aria-pressed="false">\u25B6 Play</button><label class="radar-opacity" style="flex:1;min-width:170px">Overlay opacity <input type="range" min="0" max="100" value="76" class="range" aria-label="Radar overlay opacity"></label>';
-        box.after(controls);
-        const play = controls.querySelector(".radar-play");
-        let timer = null;
-        play.onclick = () => {
-          const s = api.state;
-          if (timer) {
-            clearInterval(timer);
-            timer = null;
-            play.textContent = "\u25B6 Play";
-            play.setAttribute("aria-pressed", "false");
-            return;
-          }
-          play.textContent = "\u275A\u275A Pause";
-          play.setAttribute("aria-pressed", "true");
-          timer = setInterval(() => {
-            if (!s.radar?.frames?.length) {
-              clearInterval(timer);
-              timer = null;
-              return;
-            }
-            s.radarIndex = (s.radarIndex + 1) % s.radar.frames.length;
-            api.radarImages();
-          }, 900);
-        };
-        controls.querySelector("input").oninput = (e) => {
-          const layer = surface.querySelector(".radar-tiles");
-          if (layer) layer.style.opacity = String(Number(e.target.value) / 100);
-        };
-      }
-    }
-    function enhance(surface) {
-      if (surface.dataset.v12Enhanced === "1") return;
-      surface.dataset.v12Enhanced = "1";
-      let pointers = /* @__PURE__ */ new Map(), drag = null;
-      const map = api.state.radarMap;
-      const render2 = () => api.radarImages();
-      surface.onpointerdown = (e) => {
-        if (e.target.closest("button")) return;
-        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        surface.setPointerCapture?.(e.pointerId);
-        if (pointers.size === 1) {
-          drag = { x: e.clientX, y: e.clientY, px: map.panX, py: map.panY };
-          surface.classList.add("dragging");
-        } else drag = null;
-      };
-      surface.onpointermove = (e) => {
-        if (!pointers.has(e.pointerId)) return;
-        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (pointers.size === 2) {
-          const pts = [...pointers.values()], a = pts[0], b = pts[1], mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, distance = Math.hypot(a.x - b.x, a.y - b.y);
-          if (!surface._pinch) {
-            surface._pinch = { distance, zoom: map.z };
-            return;
-          }
-          const delta = distance / surface._pinch.distance;
-          if (Math.abs(delta - 1) > 0.015) {
-            const next = surface._pinch.zoom + (delta > 1 ? 1 : -1);
-            zoomAt(map, surface, mid.x, mid.y, next);
-            surface._pinch = { distance, zoom: map.z };
-          }
-          return;
-        }
-        if (drag) {
-          map.panX = drag.px + e.clientX - drag.x;
-          map.panY = drag.py + e.clientY - drag.y;
-          render2();
-        }
-      };
-      surface.onpointerup = surface.onpointercancel = (e) => {
-        pointers.delete(e.pointerId);
-        if (pointers.size < 2) surface._pinch = null;
-        if (!pointers.size) {
-          drag = null;
-          surface.classList.remove("dragging");
-        }
-      };
-      surface.onwheel = (e) => {
-        e.preventDefault();
-        zoomAt(
-          map,
-          surface,
-          e.clientX,
-          e.clientY,
-          map.z + (e.deltaY < 0 ? 1 : -1)
-        );
-      };
-      const buttons = surface.querySelectorAll(".map-tools button");
-      if (buttons[0])
-        buttons[0].onclick = () => {
-          map.z = Math.max(MIN_Z, map.z - 1);
-          render2();
-        };
-      if (buttons[1])
-        buttons[1].onclick = () => {
-          map.z = Math.min(MAX_Z, map.z + 1);
-          render2();
-        };
-      if (buttons[2])
-        buttons[2].onclick = () => {
-          map.panX = 0;
-          map.panY = 0;
-          render2();
-        };
-      ensureControls(surface.closest(".radarbox"), surface);
-    }
-    const observer = new MutationObserver(() => {
-      const surface = document.querySelector(".map-surface");
-      if (surface) {
-        enhance(surface);
-        ensureControls(surface.closest(".radarbox"), surface);
-      }
-    });
-    observer.observe(document.getElementById("main") || document.body, {
-      subtree: true,
-      childList: true
-    });
-  })();
 })();
-</script></body></html>
+
+    </script>
+  </body>
+</html>

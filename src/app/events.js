@@ -7,7 +7,7 @@ import { searchResults } from "../ui/locationsView.js";
 import { getHistory } from "../weather/history.js";
 import { render } from "./navigation.js";
 import { drawChart } from "../ui/charts.js";
-import { radarImages } from "../radar/legacy.js";
+import { radarImages } from "../ui/radarView.js";
 export function bind() {
   if ($("savedLocation"))
     $("savedLocation").onchange = () => {

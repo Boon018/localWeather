@@ -10,7 +10,117 @@
   --warn: #ffd28b;
   --shadow: 0 10px 30px #00000016;
 }
-.weather-columns > div { min-width: 0; }
+.radar-widget {
+  min-width: 0;
+}
+.radar-widget .radarbox {
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  margin: 16px auto;
+}
+.radar-widget .map-surface {
+  cursor: grab;
+  user-select: none;
+}
+.radar-widget .map-surface.dragging {
+  cursor: grabbing;
+}
+.radar-widget .map-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.radar-widget .map-layer img {
+  position: absolute;
+  object-fit: fill;
+}
+.radar-widget .map-marker {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #163c56;
+  border: 3px solid white;
+  box-shadow: 0 1px 4px #0008;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.radar-widget .map-compass {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  color: #132e42;
+  font-size: 22px;
+  text-shadow: 0 1px 2px white;
+  pointer-events: none;
+}
+.radar-widget .map-tools {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 6px;
+}
+.radar-widget .map-tools button {
+  padding: 3px;
+  border-radius: 10px;
+  background: #ffffffe6;
+  color: #17354d;
+  border: 1px solid #17354d55;
+  font-size: 22px;
+  line-height: 1;
+}
+.radar-widget .radarbox {
+  width: 100%;
+  max-width: none;
+  min-height: 280px;
+  aspect-ratio: 1;
+}
+.radar-widget .map-surface {
+  touch-action: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #d9e5eb;
+}
+.radar-widget .map-layer img {
+  inset: auto;
+  max-width: none;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+.radar-widget .map-tools button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.radar-widget .map-attribution {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 4px 8px;
+  color: #172e42;
+  background: #ffffffe6;
+  font-size: 12px;
+  z-index: 4;
+}
+.radar-widget .map-attribution a {
+  color: #075c75;
+}
+.radar-widget .radar-controls {
+  align-items: center;
+}
+.radar-widget .radar-controls label {
+  flex: 1;
+  min-width: 140px;
+}
+.radar-widget .map-surface:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -4px;
+}
+.weather-columns > div {
+  min-width: 0;
+}
 * {
   box-sizing: border-box;
 }
@@ -448,47 +558,6 @@ label {
   background: var(--accent);
   margin: 10px 0;
 }
-.radarbox {
-  position: relative;
-  background: #d9e5eb;
-  border-radius: 15px;
-  overflow: hidden;
-  aspect-ratio: 1;
-  max-width: 512px;
-  margin: 16px auto;
-}
-.radarbox img {
-  width: 100%;
-  position: absolute;
-  inset: 0;
-}
-.radarbox .center {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: #163c56;
-  color: white;
-  border: 2px solid white;
-  border-radius: 50%;
-  width: 12px;
-  height: 12px;
-  z-index: 3;
-}
-.radarbox .compass {
-  position: absolute;
-  right: 12px;
-  top: 10px;
-  color: #132e42;
-  z-index: 3;
-}
-.radarbox .gridlines {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(transparent 49.8%, #3453 50%, transparent 50.2%),
-    linear-gradient(90deg, transparent 49.8%, #3453 50%, transparent 50.2%);
-}
 .footnote {
   font-size: 13px;
   color: var(--muted);
@@ -538,97 +607,4 @@ label {
       transform: none;
     }
   }
-}
-
-.radarbox .basemap {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: #d9e5eb;
-}
-.radarbox .basemap img {
-  position: absolute;
-  width: 256px;
-  height: 256px;
-  max-width: none;
-  inset: auto;
-  object-fit: cover;
-}
-.radarbox > #radarImage {
-  opacity: 0.76;
-  mix-blend-mode: multiply;
-}
-.radarbox > #radarCoverage {
-  opacity: 0.16 !important;
-  mix-blend-mode: normal;
-}
-
-.map-surface {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: #d9e5eb;
-  touch-action: none;
-  cursor: grab;
-  user-select: none;
-}
-.map-surface.dragging {
-  cursor: grabbing;
-}
-.map-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.map-layer img {
-  position: absolute;
-  width: 256px;
-  height: 256px;
-  max-width: none;
-  object-fit: cover;
-}
-.map-layer.radar-tiles img {
-  opacity: 0.76;
-  mix-blend-mode: multiply;
-}
-.map-marker {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #163c56;
-  border: 3px solid white;
-  box-shadow: 0 1px 4px #0008;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.map-compass {
-  position: absolute;
-  right: 12px;
-  top: 10px;
-  color: #132e42;
-  font-size: 22px;
-  text-shadow: 0 1px 2px #fff;
-  pointer-events: none;
-}
-.map-tools {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  display: flex;
-  gap: 6px;
-}
-.map-tools button {
-  min-height: 38px;
-  width: 38px;
-  padding: 3px;
-  border-radius: 10px;
-  background: #ffffffd9;
-  color: #17354d;
-  border: 1px solid #17354d55;
-  font-size: 22px;
-  line-height: 1;
-}
-.map-tools button:last-child {
-  font-size: 18px;
 }

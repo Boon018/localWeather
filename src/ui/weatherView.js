@@ -15,9 +15,16 @@ import {
   finite,
 } from "./format.js";
 import { warningsCard } from "../api/geoSphere.js";
-import { radar, radarContent } from "../radar/legacy.js";
+import { radar, radarContent } from "../ui/radarView.js";
 export function weatherView() {
-  if (!state.data) return locationControls() + empty();
+  if (!state.data)
+    return (
+      locationControls() +
+      empty() +
+      '<section class="card"><h2>Weather radar</h2><button data-action="radar">Load radar</button>' +
+      radarContent() +
+      "</section>"
+    );
   const data = state.data,
     rs = upcoming(),
     h = rs[0] || {},

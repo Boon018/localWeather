@@ -24,21 +24,21 @@ export async function cachedHistory(l, date) {
 }
 export async function getHistory(date) {
   const l = { ...state.location },
-    seq = state.seq;
+    request = ++state.historyRequest;
+  const current = () =>
+    request === state.historyRequest && key(l) === key(state.location);
   state.histBusy = true;
   state.histDate = date;
   render();
   $("historyMessage").textContent = "Loading reanalysis…";
   try {
     const h = await cachedHistory(l, date);
-    if (seq !== state.seq) {
-      state.histBusy = false;
-      return;
-    }
+    if (!current()) return;
     state.history = h;
     state.histBusy = false;
     if (state.view === "history") render();
   } catch (e) {
+    if (!current()) return;
     state.histBusy = false;
     if (state.view === "history") {
       $("historyMessage").textContent =
@@ -51,7 +51,7 @@ export async function compareHistory() {
   if (state.histBusy) return;
   state.histBusy = true;
   const l = { ...state.location },
-    seq = state.seq,
+    request = ++state.historyRequest,
     today = dateKey(Date.now() / 1000),
     year = +today.slice(0, 4),
     md = today.slice(5);
@@ -62,12 +62,15 @@ export async function compareHistory() {
   ).filter((d) => new Date(d + "T12:00:00Z").toISOString().slice(0, 10) === d);
   const results = [];
   for (const d of dates) {
+    if (request !== state.historyRequest || key(l) !== key(state.location))
+      return;
     try {
       results.push(await cachedHistory(l, d));
     } catch {}
   }
+  if (request !== state.historyRequest || key(l) !== key(state.location))
+    return;
   state.histBusy = false;
-  if (seq !== state.seq) return;
   const means = results
       .filter((h) => h.rows.every((r) => finite(r.temperature_2m)))
       .map(

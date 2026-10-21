@@ -1,4 +1,5 @@
 import { Store } from "../storage/storage.js";
+import { readSettings } from "../storage/validate.js";
 export const DEFAULT = {
   name: "Graz",
   latitude: 47.0707,
@@ -6,16 +7,18 @@ export const DEFAULT = {
   country: "Austria",
   timezone: "Europe/Vienna",
 };
-export const settings = Object.assign(
-  {
-    theme: "auto",
-    temperature: "celsius",
-    wind: "kmh",
-    precipitation: "mm",
-    refresh: 30,
-    defaultLocation: null,
-  },
-  Store.get("settings", {}),
+export const settings = readSettings(
+  Object.assign(
+    {
+      theme: "auto",
+      temperature: "celsius",
+      wind: "kmh",
+      precipitation: "mm",
+      refresh: 30,
+      defaultLocation: null,
+    },
+    Store.get("settings", {}),
+  ),
 );
 export const state = {
   location: settings.defaultLocation || Store.get("location", DEFAULT),
@@ -23,6 +26,9 @@ export const state = {
   data: null,
   busy: false,
   seq: 0,
+  historyRequest: 0,
+  locationEpoch: 0,
+  gpsRequest: 0,
   error: "",
   history: null,
   histDate: "",

@@ -8,15 +8,13 @@ async function open(page) {
   await expect(page.locator("#radarLabel")).toContainText("Radar tiles loaded");
 }
 async function center(page, lat, lon) {
-  const result = await page
-    .locator(".map-surface")
-    .evaluate((el) => ({
-      center: JSON.parse(el.dataset.center),
-      w: el.clientWidth,
-      h: el.clientHeight,
-      left: parseFloat(el.querySelector(".map-marker").style.left),
-      top: parseFloat(el.querySelector(".map-marker").style.top),
-    }));
+  const result = await page.locator(".map-surface").evaluate((el) => ({
+    center: JSON.parse(el.dataset.center),
+    w: el.clientWidth,
+    h: el.clientHeight,
+    left: parseFloat(el.querySelector(".map-marker").style.left),
+    top: parseFloat(el.querySelector(".map-marker").style.top),
+  }));
   expect(result.center.x).toBeCloseTo((lon + 180) / 360, 8);
   expect(result.center.y).toBeCloseTo(
     (1 - Math.asinh(Math.tan((lat * Math.PI) / 180)) / Math.PI) / 2,
@@ -152,12 +150,10 @@ for (const width of [320, 768, 1024, 1440])
     await expect(page.locator(".map-surface")).toBeVisible();
     await expect
       .poll(async () => {
-        const b = await page
-          .locator(".map-surface")
-          .evaluate((el) => ({
-            w: el.clientWidth,
-            x: parseFloat(el.querySelector(".map-marker").style.left),
-          }));
+        const b = await page.locator(".map-surface").evaluate((el) => ({
+          w: el.clientWidth,
+          x: parseFloat(el.querySelector(".map-marker").style.left),
+        }));
         return Math.abs(b.x - b.w / 2);
       })
       .toBeLessThan(1);

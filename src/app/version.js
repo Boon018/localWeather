@@ -1,1 +1,2 @@
-export const APP_VERSION = "1.2.0";
+export const APP_VERSION =
+  typeof __APP_VERSION__ === "undefined" ? "development" : __APP_VERSION__;

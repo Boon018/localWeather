@@ -7,6 +7,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 process.chdir(root);
 const pkg = JSON.parse(await readFile("package.json", "utf8"));
 const js = await build({
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   entryPoints: ["src/main.js"],
   bundle: true,
   write: false,
@@ -16,11 +17,13 @@ const js = await build({
 });
 const css = await readFile("src/styles/base.css", "utf8");
 const code = js.outputFiles[0].text;
+const template = await readFile("src/index.html", "utf8");
+const worker = await readFile("sw.js", "utf8");
 const buildId = createHash("sha256")
-  .update(code + css + pkg.version)
+  .update(template + code + css + worker + pkg.version)
   .digest("hex")
   .slice(0, 12);
-const html = (await readFile("src/index.html", "utf8"))
+const html = template
   .replaceAll("{{VERSION}}", pkg.version)
   .replace("/* APP_CSS */", () => css)
   .replace("/* APP_JS */", () => code.replace(/<\/script/gi, "<\\/script"))
@@ -35,10 +38,7 @@ for (const file of ["manifest.webmanifest", "icon.svg"])
   await cp(file, "dist/" + file);
 await writeFile(
   "dist/sw.js",
-  (await readFile("sw.js", "utf8")).replace(
-    "alpen-shell-v1-1",
-    `alpen-shell-${pkg.version}-${buildId}`,
-  ),
+  worker.replace("alpen-shell-v1-1", `alpen-shell-${pkg.version}-${buildId}`),
 );
 await writeFile(
   "dist/version.json",

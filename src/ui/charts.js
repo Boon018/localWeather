@@ -149,6 +149,11 @@ export function drawChart() {
       ? state.history.rows
       : upcoming().slice(0, state.chartHours);
   let k = $("chartVar").value;
+  if (!rows?.length) {
+    svg.innerHTML =
+      '<text x="20" y="90" fill="currentColor">No hourly data in this period. Refresh when online.</text>';
+    return;
+  }
   const values = rows.map((r) => unit(r[k], k)),
     valid = values.filter(finite);
   svg.setAttribute("viewBox", "0 0 600 190");

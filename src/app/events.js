@@ -1,4 +1,5 @@
-import { $, finite } from "../ui/format.js";
+import { $, finite, key } from "../ui/format.js";
+import { validLocation } from "../storage/validate.js";
 import { Store } from "../storage/storage.js";
 import { selectLocation } from "./location.js";
 import { Provider } from "../api/openMeteo.js";
@@ -8,6 +9,7 @@ import { getHistory } from "../weather/history.js";
 import { render } from "./navigation.js";
 import { drawChart } from "../ui/charts.js";
 import { radarImages } from "../ui/radarView.js";
+let searchRequest = 0;
 export function bind() {
   if ($("savedLocation"))
     $("savedLocation").onchange = () => {
@@ -44,10 +46,17 @@ export function bind() {
       const button = form.querySelector("button");
       button.disabled = true;
       $("searchMessage").textContent = "Searching…";
+      const request = ++searchRequest,
+        locationId = key(state.location);
+      const current = () =>
+        request === searchRequest &&
+        $("searchForm") === form &&
+        locationId === key(state.location);
       try {
         const d = await Provider.search(q);
-        state.search = (d.results || []).filter(
-          (l) => finite(l.latitude) && finite(l.longitude),
+        if (!current()) return;
+        state.search = (Array.isArray(d.results) ? d.results : []).filter(
+          validLocation,
         );
         state.search.sort(
           (a, b) => (b.country_code === "AT") - (a.country_code === "AT"),
@@ -59,7 +68,7 @@ export function bind() {
             : "No locations found. Try a nearby town.";
         }
       } catch (e) {
-        if ($("searchMessage"))
+        if (current() && $("searchMessage"))
           $("searchMessage").textContent =
             "Search unavailable. Try a saved location.";
       } finally {

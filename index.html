@@ -12,7 +12,7 @@
       name="description"
       content="Private, local-first weather for Austria. Forecasts, model comparisons and historical weather."
     />
-    <meta name="alpenwetter-version" content="1.2.2" />
+    <meta name="alpenwetter-version" content="1.2.3" />
     <title>Alpenwetter</title>
     <style>
       :root {
@@ -627,12 +627,12 @@ label {
 }
 
     </style>
-  <meta name="alpenwetter-build" content="4c9331e48a7b"></head>
+  <meta name="alpenwetter-build" content="a6217f2bcd6b"></head>
   <body data-theme="auto">
     <header>
       <div>
         <div class="brand">
-          Alpenwetter <span class="small">v1.2.2</span>
+          Alpenwetter <span class="small">v1.2.3</span>
         </div>
         <h1 id="locationTitle">Graz</h1>
       </div>
@@ -652,16 +652,79 @@ label {
 
     <script>
       (() => {
+  // src/storage/keys.js
+  var STORAGE_PREFIX = "alpen.v1.";
+
+  // src/storage/validate.js
+  var object = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+  var number = Number.isFinite;
+  function validTimezone(value) {
+    try {
+      new Intl.DateTimeFormat("en", { timeZone: value });
+      return typeof value === "string";
+    } catch {
+      return false;
+    }
+  }
+  function validLocation(value) {
+    return object(value) && typeof value.name === "string" && number(value.latitude) && Math.abs(value.latitude) <= 90 && number(value.longitude) && Math.abs(value.longitude) <= 180 && (!value.timezone || validTimezone(value.timezone));
+  }
+  var rows = (value) => Array.isArray(value) && value.every((r) => object(r) && number(r.time));
+  var model = (value) => object(value) && typeof value.id === "string" && rows(value.rows);
+  function readValue(key2, value, fallback) {
+    if (key2 === "favorites")
+      return Array.isArray(value) ? value.filter(validLocation) : fallback;
+    if (key2 === "location") return validLocation(value) ? value : fallback;
+    if (key2 === "settings") return object(value) ? value : fallback;
+    if (key2.startsWith("forecast:"))
+      return object(value) && validLocation(value.location) && number(value.savedAt) && rows(value.rows) && value.rows.length && value.rows.every((r) => number(r.temperature_2m)) && Array.isArray(value.models) && value.models.every(model) && (!value.timezone || validTimezone(value.timezone)) && (!value.base || rows(value.base)) && (!value.current || object(value.current)) && (!value.astro || object(value.astro)) ? value : fallback;
+    if (key2.startsWith("history:"))
+      return object(value) && typeof value.date === "string" && rows(value.rows) && value.rows.length && value.rows.some((r) => number(r.temperature_2m)) && (!value.timezone || validTimezone(value.timezone)) ? value : fallback;
+    if (key2.startsWith("warnings:"))
+      return object(value) && Array.isArray(value.warnings) ? { ...value, warnings: value.warnings.filter(object) } : fallback;
+    if (key2.startsWith("snapshots:"))
+      return Array.isArray(value) ? value.filter(
+        (s) => object(s) && number(s.issued) && Array.isArray(s.models) && s.models.every(model)
+      ) : fallback;
+    if (key2.startsWith("scores:")) {
+      const fields = [
+        "temperature_2m",
+        "precipitation",
+        "wind_speed_10m",
+        "pressure_msl",
+        "events"
+      ];
+      return object(value) && object(value.models) && Object.values(value.models).every(
+        (m) => object(m) && fields.every(
+          (k) => object(m[k]) && number(m[k].n) && m[k].n >= 0 && number(m[k].sum) && number(m[k].correct)
+        )
+      ) ? value : fallback;
+    }
+    return value;
+  }
+  function readSettings(value) {
+    const choice = (key2, allowed, defaultValue) => allowed.includes(value[key2]) ? value[key2] : defaultValue;
+    return {
+      ...value,
+      theme: choice("theme", ["auto", "dark", "light"], "auto"),
+      temperature: choice("temperature", ["celsius", "fahrenheit"], "celsius"),
+      wind: choice("wind", ["kmh", "ms", "mph"], "kmh"),
+      precipitation: choice("precipitation", ["mm", "inch"], "mm"),
+      refresh: choice("refresh", [30, 60, 180], 30),
+      defaultLocation: validLocation(value.defaultLocation) ? value.defaultLocation : null
+    };
+  }
+
   // src/storage/storage.js
   var Store = {
-    prefix: "alpen.v1.",
+    prefix: STORAGE_PREFIX,
     memory: /* @__PURE__ */ new Map(),
     blocked: false,
     get(k, f = null) {
-      if (this.memory.has(k)) return this.memory.get(k);
+      if (this.memory.has(k)) return readValue(k, this.memory.get(k), f);
       try {
         const raw = localStorage.getItem(this.prefix + k);
-        return raw === null ? f : JSON.parse(raw);
+        return raw === null ? f : readValue(k, JSON.parse(raw), f);
       } catch {
         this.blocked = true;
         return f;
@@ -712,16 +775,18 @@ label {
     country: "Austria",
     timezone: "Europe/Vienna"
   };
-  var settings = Object.assign(
-    {
-      theme: "auto",
-      temperature: "celsius",
-      wind: "kmh",
-      precipitation: "mm",
-      refresh: 30,
-      defaultLocation: null
-    },
-    Store.get("settings", {})
+  var settings = readSettings(
+    Object.assign(
+      {
+        theme: "auto",
+        temperature: "celsius",
+        wind: "kmh",
+        precipitation: "mm",
+        refresh: 30,
+        defaultLocation: null
+      },
+      Store.get("settings", {})
+    )
   );
   var state = {
     location: settings.defaultLocation || Store.get("location", DEFAULT),
@@ -729,6 +794,9 @@ label {
     data: null,
     busy: false,
     seq: 0,
+    historyRequest: 0,
+    locationEpoch: 0,
+    gpsRequest: 0,
     error: "",
     history: null,
     histDate: "",
@@ -838,16 +906,16 @@ label {
       (r) => r.time >= Math.floor(Date.now() / 36e5) * 3600
     );
   }
-  function hourstrip(rows) {
-    return '<div class="hourstrip">' + rows.map(
+  function hourstrip(rows2) {
+    return '<div class="hourstrip">' + rows2.map(
       (r) => '<div class="hour"><small>' + esc(time(r.time)) + '</small><span class="wi">' + condition(r.weather_code, r.is_day)[0] + "</span><strong>" + temp(r.temperature_2m) + '</strong><small class="blue" title="Total precipitation in the hour ending at this time">' + rain(r.precipitation) + '/h</small><small style="display:block">' + (finite(r.precipitation_probability) ? fmt(r.precipitation_probability) + "% chance" : "Chance \u2014") + "</small></div>"
     ).join("") + "</div>";
   }
   function empty() {
     return '<section class="card empty"><div class="wi">\u{1F324}\uFE0F</div><h2>Your weather, here</h2><p class="muted">' + (state.busy ? "Fetching your forecast\u2026" : "Choose a location or refresh to load weather.") + '</p><button data-view="locations" style="margin-top:20px">Choose a location</button></section>';
   }
-  function sumComplete(rows, k) {
-    return rows.length && rows.every((r) => finite(r[k])) ? rows.reduce((s, r) => s + r[k], 0) : null;
+  function sumComplete(rows2, k) {
+    return rows2.length && rows2.every((r) => finite(r[k])) ? rows2.reduce((s, r) => s + r[k], 0) : null;
   }
 
   // src/api/http.js
@@ -916,17 +984,17 @@ label {
     }
   ];
   var Provider = {
-    async forecast(l, model) {
+    async forecast(l, model2) {
       const p = {
         latitude: l.latitude,
         longitude: l.longitude,
         timezone: "auto",
         timeformat: "unixtime",
         forecast_days: 16,
-        models: model,
-        hourly: (model === "best_match" ? [...CORE, ...EXTRA] : CORE).join(",")
+        models: model2,
+        hourly: (model2 === "best_match" ? [...CORE, ...EXTRA] : CORE).join(",")
       };
-      if (model === "best_match") {
+      if (model2 === "best_match") {
         p.current = [
           "temperature_2m",
           "apparent_temperature",
@@ -1013,9 +1081,9 @@ label {
       return out;
     }).filter((r) => finite(r.temperature_2m));
   }
-  function daily(rows) {
+  function daily(rows2) {
     const groups = /* @__PURE__ */ new Map();
-    for (const r of rows) {
+    for (const r of rows2) {
       const k = dateKey(r.time);
       if (!groups.has(k)) groups.set(k, []);
       groups.get(k).push(r);
@@ -1715,7 +1783,7 @@ label {
       (n) => '<option value="' + n + '" ' + (state.chartHours === n ? "selected" : "") + ">" + n + " hours</option>"
     ).join("") + "</select>") + '</div><div class="chartbox"><svg class="chart" id="chart" role="img" aria-label="Weather chart"></svg><input type="range" class="range" id="chartCursor" min="0" value="0" aria-label="Inspect hour"><p class="chart-readout" id="chartReadout"></p></div>';
   }
-  function tableHTML(rows) {
+  function tableHTML(rows2) {
     const cols = [
       ["temperature_2m", "Temp"],
       ["apparent_temperature", "Feels"],
@@ -1731,7 +1799,7 @@ label {
       ["cloud_cover", "Cloud %"],
       ["uv_index", "UV"]
     ];
-    return '<div class="scroll"><table><thead><tr><th>Local time</th><th>Sky</th>' + cols.map((c) => "<th>" + c[1] + "</th>").join("") + "</tr></thead><tbody>" + rows.map(
+    return '<div class="scroll"><table><thead><tr><th>Local time</th><th>Sky</th>' + cols.map((c) => "<th>" + c[1] + "</th>").join("") + "</tr></thead><tbody>" + rows2.map(
       (r) => "<tr><td>" + esc(
         time(r.time, {
           day: "numeric",
@@ -1756,9 +1824,13 @@ label {
   function drawChart() {
     const svg = $("chart");
     if (!svg) return;
-    let rows = state.view === "history" ? state.history.rows : upcoming().slice(0, state.chartHours);
+    let rows2 = state.view === "history" ? state.history.rows : upcoming().slice(0, state.chartHours);
     let k = $("chartVar").value;
-    const values = rows.map((r) => unit(r[k], k)), valid = values.filter(finite);
+    if (!rows2?.length) {
+      svg.innerHTML = '<text x="20" y="90" fill="currentColor">No hourly data in this period. Refresh when online.</text>';
+      return;
+    }
+    const values = rows2.map((r) => unit(r[k], k)), valid = values.filter(finite);
     svg.setAttribute("viewBox", "0 0 600 190");
     if (!valid.length) {
       svg.innerHTML = '<text x="20" y="90" fill="currentColor">No data for this variable</text>';
@@ -1771,7 +1843,7 @@ label {
       hi += 1;
       lo -= 1;
     }
-    const x = (i) => 45 + i / Math.max(1, rows.length - 1) * 540, y = (v) => 155 - (v - lo) / (hi - lo) * 130;
+    const x = (i) => 45 + i / Math.max(1, rows2.length - 1) * 540, y = (v) => 155 - (v - lo) / (hi - lo) * 130;
     let path = "", active = false;
     values.forEach((v, i) => {
       if (!finite(v)) {
@@ -1784,18 +1856,18 @@ label {
     svg.innerHTML = [0, 0.5, 1].map(
       (a) => '<line x1="45" x2="590" y1="' + (155 - a * 130) + '" y2="' + (155 - a * 130) + '" stroke="currentColor" opacity=".12"/><text x="0" y="' + (160 - a * 130) + '" fill="currentColor" font-size="13">' + fmt(lo + (hi - lo) * a, 1) + "</text>"
     ).join("") + '<path d="' + path + '" fill="none" stroke="var(--accent)" stroke-width="3"/><text x="45" y="183" fill="currentColor" font-size="13">' + esc(
-      time(rows[0].time, { day: "numeric", month: "short", hour: "2-digit" })
+      time(rows2[0].time, { day: "numeric", month: "short", hour: "2-digit" })
     ) + '</text><text x="590" y="183" text-anchor="end" fill="currentColor" font-size="13">' + esc(
-      time(rows.at(-1).time, {
+      time(rows2.at(-1).time, {
         day: "numeric",
         month: "short",
         hour: "2-digit"
       })
     ) + '</text><line id="cursorLine" y1="20" y2="155" stroke="var(--accent)" opacity=".5"/>';
     const cursor = $("chartCursor");
-    cursor.max = rows.length - 1;
+    cursor.max = rows2.length - 1;
     function inspect(i) {
-      const r = rows[i];
+      const r = rows2[i];
       $("cursorLine").setAttribute("x1", x(i));
       $("cursorLine").setAttribute("x2", x(i));
       let value = k.includes("temperature") ? temp(r[k]) : k === "precipitation" ? rain(r[k]) + "/h" : k.startsWith("wind_") ? wind(r[k]) : fmt(r[k], 1) + (k === "pressure_msl" ? " hPa" : k.includes("probability") || k.includes("humidity") ? "%" : "");
@@ -1809,9 +1881,9 @@ label {
         Math.max(
           0,
           Math.min(
-            rows.length - 1,
+            rows2.length - 1,
             Math.round(
-              ((e.clientX - box.left) / box.width * 600 - 45) / 540 * (rows.length - 1)
+              ((e.clientX - box.left) / box.width * 600 - 45) / 540 * (rows2.length - 1)
             )
           )
         )
@@ -1874,21 +1946,20 @@ label {
     return out;
   }
   async function getHistory(date) {
-    const l = { ...state.location }, seq = state.seq;
+    const l = { ...state.location }, request = ++state.historyRequest;
+    const current = () => request === state.historyRequest && key(l) === key(state.location);
     state.histBusy = true;
     state.histDate = date;
     render();
     $("historyMessage").textContent = "Loading reanalysis\u2026";
     try {
       const h = await cachedHistory(l, date);
-      if (seq !== state.seq) {
-        state.histBusy = false;
-        return;
-      }
+      if (!current()) return;
       state.history = h;
       state.histBusy = false;
       if (state.view === "history") render();
     } catch (e) {
+      if (!current()) return;
       state.histBusy = false;
       if (state.view === "history") {
         $("historyMessage").textContent = "Historical data unavailable. " + e.message;
@@ -1899,7 +1970,7 @@ label {
   async function compareHistory() {
     if (state.histBusy) return;
     state.histBusy = true;
-    const l = { ...state.location }, seq = state.seq, today = dateKey(Date.now() / 1e3), year = +today.slice(0, 4), md = today.slice(5);
+    const l = { ...state.location }, request = ++state.historyRequest, today = dateKey(Date.now() / 1e3), year = +today.slice(0, 4), md = today.slice(5);
     $("compareResult").textContent = "Loading ten past years\u2026";
     const dates = Array.from(
       { length: 10 },
@@ -1907,13 +1978,16 @@ label {
     ).filter((d) => (/* @__PURE__ */ new Date(d + "T12:00:00Z")).toISOString().slice(0, 10) === d);
     const results = [];
     for (const d of dates) {
+      if (request !== state.historyRequest || key(l) !== key(state.location))
+        return;
       try {
         results.push(await cachedHistory(l, d));
       } catch {
       }
     }
+    if (request !== state.historyRequest || key(l) !== key(state.location))
+      return;
     state.histBusy = false;
-    if (seq !== state.seq) return;
     const means = results.filter((h) => h.rows.every((r) => finite(r.temperature_2m))).map(
       (h) => h.rows.reduce((s, r) => s + r.temperature_2m, 0) / h.rows.length
     ), precips = results.map((h) => sumComplete(h.rows, "precipitation")).filter(finite);
@@ -2019,8 +2093,8 @@ label {
   function modelView() {
     const d = state.data, h = upcoming()[0], snaps = Store.get("snapshots:" + key(state.location), []), scores = Store.get("scores:" + key(state.location));
     return '<h2 class="headline">Behind the forecast</h2><section class="card"><h3>Regional detail. Global perspective.</h3><p class="muted">ICON gets the most influence in the first 48 hours. ECMWF takes the lead farther out. We renormalize weights whenever a model or variable is missing.</p><p class="footnote">This is an experimental heuristic, not a proven improvement over any provider. Alpine terrain and thunderstorms can differ sharply within one model grid cell.</p></section>' + MODELS.map((m) => {
-      const model = d?.models.find((x) => x.id === m.id), r = model?.rows.find((x) => x.time === h?.time);
-      return '<section class="card"><div class="sectionhead"><h2>' + m.name + '</h2><span class="pill">' + (model ? "Available" : "Unavailable") + '</span></div><p class="muted">' + m.detail + '</p><div class="grid" style="margin-top:16px">' + metric("Next hour", temp(r?.temperature_2m)) + metric("Precipitation", rain(r?.precipitation)) + metric("Wind", wind(r?.wind_speed_10m)) + '</div><p class="footnote">Retrieved ' + (d ? time(d.savedAt / 1e3) : "\u2014") + " \xB7 Only non-null hours contribute.</p></section>";
+      const model2 = d?.models.find((x) => x.id === m.id), r = model2?.rows.find((x) => x.time === h?.time);
+      return '<section class="card"><div class="sectionhead"><h2>' + m.name + '</h2><span class="pill">' + (model2 ? "Available" : "Unavailable") + '</span></div><p class="muted">' + m.detail + '</p><div class="grid" style="margin-top:16px">' + metric("Next hour", temp(r?.temperature_2m)) + metric("Precipitation", rain(r?.precipitation)) + metric("Wind", wind(r?.wind_speed_10m)) + '</div><p class="footnote">Retrieved ' + (d ? time(d.savedAt / 1e3) : "\u2014") + " \xB7 Only non-null hours contribute.</p></section>";
     }).join("") + (d ? '<section class="card"><h2>Next 24 hours \xB7 temperature</h2><div class="scroll"><table><thead><tr><th>Hour</th>' + MODELS.map((m) => "<th>" + m.name + "</th>").join("") + "<th>Consensus</th></tr></thead><tbody>" + upcoming().slice(0, 24).map(
       (r) => "<tr><td>" + time(r.time) + "</td>" + MODELS.map(
         (m) => "<td>" + temp(
@@ -2029,6 +2103,9 @@ label {
       ).join("") + "<td>" + temp(r.temperature_2m) + "</td></tr>"
     ).join("") + "</tbody></table></div></section>" : "") + '<section class="card stack"><h2>How consensus works</h2><p>Temperature, pressure, wind speed and cloud cover use lead-time-weighted means. Hourly precipitation and gusts use weighted medians to limit single-model outliers. This can miss extremes; use official warnings for hazards.</p><p>Rain probability, weather icons, feels-like, humidity, direction, rain/snow split, UV and visibility come from Best Match. These fields are not recomputed from the consensus and may differ. Current weather is a model estimate from Best Match, not a weather station.</p><p>Best Match is never an additional consensus vote. When all explicit models lack a variable, Best Match fills the gap. Daily totals and highs/lows are calculated from hourly consensus; daily rain chance is the highest hourly probability.</p><p>ICON weights: 0.50 / 0.40 / 0.25 for &lt;48 / 48\u2013120 / \u2265120 hours. ECMWF: 0.30 before 48h, then 0.45. GFS: 0.20 before 48h, then 0.30. Available weights are normalized.</p><p class="footnote">Retrieval time is not model initialization time. The free forecast response does not expose a reliable run timestamp.</p></section><section class="card stack"><h2>Local forecast journal</h2><p>' + snaps.length + ' snapshots saved for this location. At most one per six hours; each retains the next 48 hours. Retention: 35 days, up to 36 snapshots.</p><button data-action="score">Evaluate mature forecasts</button><div id="scoreMessage">' + (scores ? scoresHTML(scores) : '<p class="footnote">Scores need forecasts saved at least seven days ago. Evaluation uses ERA5 as a proxy, not independent station truth. No learned weights are applied.</p>') + "</div></section>";
   }
+
+  // src/app/version.js
+  var APP_VERSION = false ? "development" : "1.2.3";
 
   // src/ui/settingsView.js
   function settingSelect(id, label, opts, value) {
@@ -2080,7 +2157,7 @@ label {
         [180, "Every 3 hours"]
       ],
       settings.refresh
-    ) + '<div class="setting"><label>Startup location</label><p>' + esc(settings.defaultLocation?.name || "Last selected location") + '</p><div class="actions"><button data-action="default">Use ' + esc(state.location.name) + '</button><button data-action="lastLocation">Use last selected</button></div></div></section><section class="card stack"><h2>On this device</h2><button data-action="cacheTest">Check local cache</button><div id="cacheReport" role="status"></div><p>Places, settings, forecasts, historical queries and model scores stay in this browser. No analytics, advertising or app account. Weather providers receive requested coordinates and your IP address; location search receives your search text.</p><p>Cache holds eight locations and 40 historical queries. Browser storage can be evicted by iOS; export your journal if it matters to you. Private Browsing is temporary.</p><div class="actions"><button data-action="export">Export local data</button><button data-action="clearCache">Clear weather cache</button><button class="danger" data-action="clear">Erase all app data</button></div><p class="footnote">The testing URL serves static app files using your existing ChatGPT access. The weather app has no backend. A standalone file needs no host, but iOS Files previews may not execute it; use the HTTPS testing link in Safari.</p></section><section class="card stack"><h2>Sources & attribution</h2><p><a href="./alpenwetter-source.zip" download>Download complete source &amp; PWA files</a></p><p><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> \xB7 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>. Forecast providers: DWD ICON, ECMWF IFS and NOAA GFS. Historical reanalysis: Copernicus / ECMWF ERA5, via Open-Meteo. Location names: GeoNames via Open-Meteo.</p><p><a href="https://open-meteo.com/en/docs" target="_blank" rel="noreferrer">Forecast documentation</a> \xB7 <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noreferrer">History documentation</a> \xB7 <a href="https://open-meteo.com/en/terms" target="_blank" rel="noreferrer">Free non-commercial usage terms</a></p><p><a href="https://warnungen.zamg.at/" target="_blank" rel="noreferrer">GeoSphere Austria official warnings</a>. <a href="https://www.rainviewer.com/api.html" target="_blank" rel="noreferrer">RainViewer radar</a>, personal use; loaded only when requested.</p><p class="footnote">Prototype 1.1 \xB7 No background tracking or background learning. Cached weather works while this page remains open. Optional PWA files are included for a future independent HTTPS host; service-worker registration is deliberately off on the authenticated testing site.</p></section>';
+    ) + '<div class="setting"><label>Startup location</label><p>' + esc(settings.defaultLocation?.name || "Last selected location") + '</p><div class="actions"><button data-action="default">Use ' + esc(state.location.name) + '</button><button data-action="lastLocation">Use last selected</button></div></div></section><section class="card stack"><h2>On this device</h2><button data-action="cacheTest">Check local cache</button><div id="cacheReport" role="status"></div><p>Places, settings, forecasts, historical queries and model scores stay in this browser. No analytics, advertising or app account. Weather providers receive requested coordinates and your IP address; location search receives your search text.</p><p>Cache holds eight locations and 40 historical queries. Browser storage can be evicted by iOS; export your journal if it matters to you. Private Browsing is temporary.</p><div class="actions"><button data-action="export">Export local data</button><button data-action="clearCache">Clear weather cache</button><button class="danger" data-action="clear">Erase all app data</button></div><p class="footnote">GitHub Pages serves this public app. The app has no backend. Each browser keeps its own local data. Local files may have GPS or network restrictions; use the HTTPS app for the full map.</p></section><section class="card stack"><h2>Sources & attribution</h2><p><a href="https://github.com/Boon018/localWeather" target="_blank" rel="noreferrer">Complete source code</a> \xB7 <a href="./standalone.html" download>Download standalone HTML</a></p><p><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> \xB7 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>. Forecast providers: DWD ICON, ECMWF IFS and NOAA GFS. Historical reanalysis: Copernicus / ECMWF ERA5, via Open-Meteo. Location names: GeoNames via Open-Meteo.</p><p><a href="https://open-meteo.com/en/docs" target="_blank" rel="noreferrer">Forecast documentation</a> \xB7 <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noreferrer">History documentation</a> \xB7 <a href="https://open-meteo.com/en/terms" target="_blank" rel="noreferrer">Free non-commercial usage terms</a></p><p><a href="https://warnungen.zamg.at/" target="_blank" rel="noreferrer">GeoSphere Austria official warnings</a>. <a href="https://www.rainviewer.com/api.html" target="_blank" rel="noreferrer">RainViewer radar</a>, personal use; loaded only when requested.</p><p class="footnote">Version ' + APP_VERSION + ' \xB7 No background tracking or learning. Cached weather is available in this browser. To cache the app shell for offline reopening, <a href="./?pwa=1">enable optional offline installation</a> while online. Your browser may later evict stored files.</p></section>';
   }
   function exportData() {
     const data = Object.fromEntries(Store.keys().map((k) => [k, Store.get(k)]));
@@ -2110,6 +2187,7 @@ label {
 
   // src/weather/forecast.js
   async function loadWeather(force = false) {
+    if (state.busy && !force) return;
     const seq = ++state.seq, l = { ...state.location }, candidate = Store.get("forecast:" + key(l)), cache = validCache(candidate, l) ? candidate : null, changed = state.data && key(state.data.location) !== key(l);
     state.error = "";
     state.busy = false;
@@ -2159,11 +2237,11 @@ label {
     state.data = {
       savedAt: Date.now(),
       location: l,
-      timezone: raw.timezone || "Europe/Vienna",
-      current: base?.raw.current || null,
-      astro: base?.raw.daily || null,
+      timezone: validTimezone(raw.timezone) ? raw.timezone : "Europe/Vienna",
+      current: Number.isFinite(base?.raw.current?.time) ? base.raw.current : null,
+      astro: Array.isArray(base?.raw.daily?.time) && base.raw.daily.time.every(Number.isFinite) ? base.raw.daily : null,
       base: base?.rows || [],
-      models: models.map(({ id, rows }) => ({ id, rows })),
+      models: models.map(({ id, rows: rows2 }) => ({ id, rows: rows2 })),
       failures: ids.filter((id, i) => results[i].status === "rejected")
     };
     state.data.rows = consensus(base, models);
@@ -2177,6 +2255,12 @@ label {
 
   // src/app/location.js
   function selectLocation(l) {
+    if (!validLocation(l)) {
+      locationMessage("This location is invalid. Choose another place.");
+      return;
+    }
+    state.locationEpoch++;
+    state.historyRequest++;
     state.radarRequest++;
     state.radar = null;
     state.radarBusy = false;
@@ -2185,6 +2269,7 @@ label {
     state.history = null;
     state.compare = null;
     state.histBusy = false;
+    state.busy = false;
     state.location = {
       name: l.name,
       latitude: l.latitude,
@@ -2211,9 +2296,10 @@ label {
       return;
     }
     locationMessage("Requesting your location\u2026");
+    const request = ++state.gpsRequest, epoch = state.locationEpoch;
     let finished = false;
     const watchdog = setTimeout(() => {
-      if (!finished) {
+      if (!finished && request === state.gpsRequest && epoch === state.locationEpoch) {
         finished = true;
         locationMessage(
           "Location did not respond. Use the search field, or open the HTTPS app and allow location in iPhone settings."
@@ -2221,7 +2307,8 @@ label {
       }
     }, 14e3);
     const done = (fn) => (value) => {
-      if (finished) return;
+      if (finished || request !== state.gpsRequest || epoch !== state.locationEpoch)
+        return;
       finished = true;
       clearTimeout(watchdog);
       fn(value);
@@ -2254,6 +2341,7 @@ label {
   }
 
   // src/app/events.js
+  var searchRequest = 0;
   function bind() {
     if ($("savedLocation"))
       $("savedLocation").onchange = () => {
@@ -2288,10 +2376,13 @@ label {
         const button = form.querySelector("button");
         button.disabled = true;
         $("searchMessage").textContent = "Searching\u2026";
+        const request = ++searchRequest, locationId = key(state.location);
+        const current = () => request === searchRequest && $("searchForm") === form && locationId === key(state.location);
         try {
           const d = await Provider.search(q);
-          state.search = (d.results || []).filter(
-            (l) => finite(l.latitude) && finite(l.longitude)
+          if (!current()) return;
+          state.search = (Array.isArray(d.results) ? d.results : []).filter(
+            validLocation
           );
           state.search.sort(
             (a, b) => (b.country_code === "AT") - (a.country_code === "AT")
@@ -2301,7 +2392,7 @@ label {
             $("searchMessage").textContent = state.search.length ? "" : "No locations found. Try a nearby town.";
           }
         } catch (e2) {
-          if ($("searchMessage"))
+          if (current() && $("searchMessage"))
             $("searchMessage").textContent = "Search unavailable. Try a saved location.";
         } finally {
           button.disabled = false;

@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { readValue,readSettings } from '../src/storage/validate.js';
+const fallback=[];
+for(const value of [null,42,'invalid',{},[null]])assert.deepEqual(readValue('favorites',value,fallback),[]);
+assert.equal(readValue('location',{name:'x',latitude:90,longitude:200},null),null);
+assert.equal(readValue('location',{name:'x',latitude:47,longitude:15,timezone:'bad-zone'},null),null);
+assert.equal(readValue('history:47,15:2025-01-01',{rows:'bad'},null),null);
+assert.equal(readValue('scores:47,15',{models:{icon:{}}},null),null);
+assert.equal(readSettings({refresh:0,theme:'fake',defaultLocation:'bad'}).refresh,30);
+const favorite={name:'Graz',latitude:47,longitude:15};
+assert.deepEqual(readValue('favorites',[null,favorite],[]),[favorite]);
+assert.equal(readValue('unrecognized-key',{custom:true},null).custom,true);
+console.log('PASS: corrupt storage is ignored without rewriting valid records; settings and coordinates validated.');

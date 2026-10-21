@@ -1,12 +1,14 @@
+import { STORAGE_PREFIX } from "./keys.js";
+import { readValue } from "./validate.js";
 export const Store = {
-  prefix: "alpen.v1.",
+  prefix: STORAGE_PREFIX,
   memory: new Map(),
   blocked: false,
   get(k, f = null) {
-    if (this.memory.has(k)) return this.memory.get(k);
+    if (this.memory.has(k)) return readValue(k, this.memory.get(k), f);
     try {
       const raw = localStorage.getItem(this.prefix + k);
-      return raw === null ? f : JSON.parse(raw);
+      return raw === null ? f : readValue(k, JSON.parse(raw), f);
     } catch {
       this.blocked = true;
       return f;

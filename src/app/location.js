@@ -4,7 +4,14 @@ import { Store } from "../storage/storage.js";
 import { loadWeather } from "../weather/forecast.js";
 import { status } from "../ui/status.js";
 import { $ } from "../ui/format.js";
+import { validLocation } from "../storage/validate.js";
 export function selectLocation(l) {
+  if (!validLocation(l)) {
+    locationMessage("This location is invalid. Choose another place.");
+    return;
+  }
+  state.locationEpoch++;
+  state.historyRequest++;
   state.radarRequest++;
   state.radar = null;
   state.radarBusy = false;
@@ -13,6 +20,7 @@ export function selectLocation(l) {
   state.history = null;
   state.compare = null;
   state.histBusy = false;
+  state.busy = false;
   state.location = {
     name: l.name,
     latitude: l.latitude,
@@ -39,9 +47,15 @@ export async function gps() {
     return;
   }
   locationMessage("Requesting your location…");
+  const request = ++state.gpsRequest,
+    epoch = state.locationEpoch;
   let finished = false;
   const watchdog = setTimeout(() => {
-    if (!finished) {
+    if (
+      !finished &&
+      request === state.gpsRequest &&
+      epoch === state.locationEpoch
+    ) {
       finished = true;
       locationMessage(
         "Location did not respond. Use the search field, or open the HTTPS app and allow location in iPhone settings.",
@@ -49,7 +63,12 @@ export async function gps() {
     }
   }, 14000);
   const done = (fn) => (value) => {
-    if (finished) return;
+    if (
+      finished ||
+      request !== state.gpsRequest ||
+      epoch !== state.locationEpoch
+    )
+      return;
     finished = true;
     clearTimeout(watchdog);
     fn(value);

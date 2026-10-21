@@ -9,7 +9,9 @@ import { MODELS, Provider } from "../api/openMeteo.js";
 import { normalize } from "./normalize.js";
 import { daily, consensus } from "./consensus.js";
 import { saveSnapshots } from "./modelScoring.js";
+import { validTimezone } from "../storage/validate.js";
 export async function loadWeather(force = false) {
+  if (state.busy && !force) return;
   const seq = ++state.seq,
     l = { ...state.location },
     candidate = Store.get("forecast:" + key(l)),
@@ -73,9 +75,13 @@ export async function loadWeather(force = false) {
   state.data = {
     savedAt: Date.now(),
     location: l,
-    timezone: raw.timezone || "Europe/Vienna",
-    current: base?.raw.current || null,
-    astro: base?.raw.daily || null,
+    timezone: validTimezone(raw.timezone) ? raw.timezone : "Europe/Vienna",
+    current: Number.isFinite(base?.raw.current?.time) ? base.raw.current : null,
+    astro:
+      Array.isArray(base?.raw.daily?.time) &&
+      base.raw.daily.time.every(Number.isFinite)
+        ? base.raw.daily
+        : null,
     base: base?.rows || [],
     models: models.map(({ id, rows }) => ({ id, rows })),
     failures: ids.filter((id, i) => results[i].status === "rejected"),

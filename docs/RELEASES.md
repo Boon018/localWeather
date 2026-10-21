@@ -4,7 +4,9 @@
 
 - Original interactive map: `077411a`.
 - Public v1.2.0: `15e101c` (local recovery tag `recovery/v1.2.0`).
-- Modular extraction: `28daa2c`, on `release/v1.2`, pending browser gates.
+- Modular extraction: `28daa2c`; follow-up `76f786b` passed all 16 Chromium/WebKit browser checks.
+- Radar implementation: `a56f963` passed all 30 Chromium/WebKit browser checks.
+- Hardening is subject to the final feature-branch gate and deployment smoke test.
 
 `src/` is authoritative. `index.html`, `dist/index.html` and
 `dist/standalone.html` are generated; do not edit them. Build with `npm ci`

@@ -1,7 +1,6 @@
 /* Built-in Node tests. Optional live fixtures: node tests/test.cjs /path/to/fixtures */
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
-// The deployed application is the repository root until the modular build is
-// promoted. Keep this explicit so tests cannot silently exercise a stale dist.
+// Exercise the generated production artifact; build before running this suite.
 const entry=process.env.ALPEN_ENTRY||'../dist/index.html';
 const html=fs.readFileSync(path.join(__dirname,entry),'utf8');
 const script=html.match(/<script>([\s\S]*?)<\/script>/)[1].replace('};loadWeather();','};');

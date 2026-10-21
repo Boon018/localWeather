@@ -126,7 +126,8 @@ setInterval(() => {
 }, 60000);
 if (
   new URLSearchParams(location.search).get("pwa") === "1" &&
-  location.protocol === "https:" &&
+  (location.protocol === "https:" ||
+    (window.isSecureContext && ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname))) &&
   "serviceWorker" in navigator
 ) {
   const link = document.createElement("link");

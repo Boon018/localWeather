@@ -627,7 +627,7 @@ label {
 }
 
     </style>
-  <meta name="alpenwetter-build" content="a6217f2bcd6b"></head>
+  <meta name="alpenwetter-build" content="cbf005f44211"></head>
   <body data-theme="auto">
     <header>
       <div>
@@ -2559,7 +2559,7 @@ label {
     if (!document.hidden && !state.busy && (!state.data || Date.now() - state.data.savedAt > settings.refresh * 6e4))
       loadWeather();
   }, 6e4);
-  if (new URLSearchParams(location.search).get("pwa") === "1" && location.protocol === "https:" && "serviceWorker" in navigator) {
+  if (new URLSearchParams(location.search).get("pwa") === "1" && (location.protocol === "https:" || window.isSecureContext && ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) && "serviceWorker" in navigator) {
     const link = document.createElement("link");
     link.rel = "manifest";
     link.href = "./manifest.webmanifest";

@@ -1,4 +1,22 @@
-# localWeather
+# Alpenwetter v1.2.3
+
+[Open the app](https://boon018.github.io/localWeather/) · [Standalone HTML](https://boon018.github.io/localWeather/standalone.html)
+
+## Current release
+
+The authoritative source is now `src/`. Generated `index.html`, `dist/index.html` and `dist/standalone.html` contain the same bundled JavaScript and CSS; do not edit them manually. There are no runtime CDN scripts. End users need no development tools.
+
+Radar now includes an OpenStreetMap basemap, accurate shared Web Mercator positioning, drag/pinch/wheel zoom, recentering, past-frame playback, timestamps and opacity. Basemap and radar fail independently. Native radar tiles stop at zoom 7 and scale at closer views. Street tiles require the HTTPS app; file URLs cannot provide the required web Referer. See [radar design and attribution](docs/RADAR.md).
+
+This release preserves forecast mathematics and the `alpen.v1.` storage namespace. It adds malformed-data validation, stale-request protection and tablet layout fixes. See [release gates, recovery and device checklist](docs/RELEASES.md).
+
+For development use Node 22: `npm ci`, `npm run build`, `npm test`, `npm run check:artifact`, then `npx playwright install --with-deps chromium webkit` and `npm run test:browser`. CI uses deterministic provider fixtures. Physical iPhone/iPad gestures, GPS permission prompts and PWA installation still require device acceptance.
+
+The Pages workflow tests before publishing only `dist/`, then checks the deployed build identifier. The public URL is unchanged. Source downloads are available from this repository; the old source ZIP is retired.
+
+Optional offline app reopening: open [the PWA-enabled URL](https://boon018.github.io/localWeather/?pwa=1) online first. The service worker caches only the shell, uses network-first navigation and retains one previous shell. It does not cache weather API responses or map tiles. Weather remains in localStorage. Chromium automation covers offline reopening; physical-device installation/update testing remains necessary.
+
+The following sections are historical prototype notes. Descriptions of the private testing host, a radar without basemap, root-source deployment, absent browser tests and the source ZIP are superseded by this section.
 
 # Alpenwetter 1.1 — local iPhone fixes (20 October 2026)
 

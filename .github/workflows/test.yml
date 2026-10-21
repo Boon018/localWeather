@@ -1,0 +1,27 @@
+name: Alpenwetter tests
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run regression suites
+        run: npm test
+      - name: Build standalone artifacts
+        run: npm run build
+      - name: Check generated artifact parity
+        run: npm run check:artifact

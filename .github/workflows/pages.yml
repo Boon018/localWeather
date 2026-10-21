@@ -1,4 +1,4 @@
-name: Deploy weather app to GitHub Pages
+name: Test and deploy Alpenwetter
 
 on:
   push:
@@ -23,12 +23,27 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run regression tests
+        run: npm test
+
+      - name: Build production artifacts
+        run: npm run build
+
+      - name: Verify standalone artifact and storage-safe paths
+        run: npm run check:artifact
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Package static site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ./dist
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

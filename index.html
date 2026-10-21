@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#122c43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="description" content="Private, local-first weather for Austria. Forecasts, model comparisons and historical weather."><title>Alpenwetter</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#122c43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="description" content="Private, local-first weather for Austria. Forecasts, model comparisons and historical weather."><meta name="alpenwetter-version" content="1.2.0"><title>Alpenwetter</title>
 <style>
 :root{color-scheme:dark;--bg:#0a1b2a;--card:#142d41;--card2:#1c3a50;--text:#f1f7fa;--muted:#aac1d1;--accent:#8fe4d5;--line:#ffffff19;--warn:#ffd28b;--shadow:0 10px 30px #00000016}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body[data-theme=light]{color-scheme:light;--bg:#eef5f8;--card:#fff;--card2:#e5eff4;--text:#132e42;--muted:#50697b;--accent:#076e67;--line:#17354d20;--warn:#855100;--shadow:0 8px 24px #17354d0a}@media(prefers-color-scheme:light){body[data-theme=auto]{color-scheme:light;--bg:#eef5f8;--card:#fff;--card2:#e5eff4;--text:#132e42;--muted:#50697b;--accent:#076e67;--line:#17354d20;--warn:#855100;--shadow:0 8px 24px #17354d0a}}button,input,select{font:inherit}button,select,input{min-height:46px;border:1px solid var(--line);border-radius:14px;color:var(--text);background:var(--card2);padding:10px 14px}button{cursor:pointer}button:disabled{opacity:.5;cursor:wait}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}a{color:var(--accent)}h1,h2,h3,p{margin:0}h1{font-size:28px;letter-spacing:-.8px}h2{font-size:20px;letter-spacing:-.3px}h3{font-size:16px}p+p{margin-top:12px}small,.small{font-size:13px;color:var(--muted)}.muted{color:var(--muted)}header{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1000px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 20px 12px}.brand{font-size:12px;letter-spacing:2px;font-weight:750;color:var(--accent);text-transform:uppercase}.header-actions{display:flex;gap:8px;flex-shrink:0}header>div:first-child{min-width:0}h1{overflow-wrap:anywhere}.iconbutton{width:46px;padding:8px;font-size:23px}.page{max-width:1000px;margin:auto;padding:12px 20px calc(110px + env(safe-area-inset-bottom))}.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}.sectionhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.hero{text-align:center;padding:24px 10px 30px;background:radial-gradient(ellipse at 50% 5%,#468fbb30,transparent 70%);border-radius:28px}.hero .condition-icon{font-size:58px;line-height:1.3}.temperature{font-size:100px;font-weight:250;letter-spacing:-7px;line-height:1.15}.condition{font-size:20px}.pill{display:inline-block;font-size:13px;padding:5px 10px;border-radius:20px;background:var(--card2);color:var(--accent);margin-top:14px}.hourstrip{display:flex;gap:8px;overflow-x:auto;padding:0 0 12px;scroll-snap-type:x proximity}.hour{min-width:95px;text-align:center;padding:10px 7px;background:var(--card2);border-radius:18px;scroll-snap-align:start}.hour strong{display:block;font-size:19px}.hour .wi{display:block;font-size:25px;margin:9px 0}.blue{color:var(--accent)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metric{padding:16px;border-radius:18px;background:var(--card2);min-width:0}.metric .value{font-size:24px;font-weight:550;margin-top:5px;overflow-wrap:anywhere}.metric .label{font-size:14px;color:var(--muted)}nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;background:var(--bg);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:5}nav button{border:0;background:transparent;flex:1;max-width:130px;border-radius:12px;font-size:12px;padding:6px 2px;color:var(--muted)}nav button span{display:block;font-size:22px;line-height:1.4}nav button[aria-current=page]{background:var(--card2);color:var(--accent)}.status{font-size:14px;color:var(--muted);padding:0 22px;max-width:1000px;margin:0 auto;min-height:23px}.status.error{color:var(--warn)}.days details{border-bottom:1px solid var(--line)}summary{cursor:pointer;list-style:none;padding:15px 0;min-height:54px}summary::-webkit-details-marker{display:none}.dayrow{display:grid;grid-template-columns:66px 24px minmax(25px,1fr) 70px;gap:8px;align-items:center}.daytemp{white-space:nowrap;text-align:right}.bar{height:5px;border-radius:8px;background:linear-gradient(90deg,#72c8df,#f2cb79)}.dayextra{padding-bottom:16px}.tag{color:var(--muted);font-size:12px}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;white-space:nowrap;font-size:14px}th,td{text-align:right;padding:13px 10px;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-weight:500}form{display:flex;gap:8px;margin:16px 0}form input{min-width:0;flex:1}label{display:block;color:var(--muted);font-size:14px;margin-bottom:6px}.setting{margin:20px 0}.setting select{width:100%}.location-controls form{margin-top:0}.locationrow{display:flex;gap:8px;margin:10px 0}.locationrow .selectloc{flex:1;text-align:left}.notice{background:var(--card2);border-left:3px solid var(--accent);padding:14px;border-radius:8px;margin:12px 0;font-size:14px}.notice.warning{border-color:var(--warn)}.stack>*+*{margin-top:12px}.chart{width:100%;height:190px;display:block;touch-action:pan-y}.chartbox{margin-top:14px}.chart-controls{display:flex;gap:8px;flex-wrap:wrap}.chart-controls select{flex:1;min-width:140px}.chart-readout{min-height:28px;font-size:14px;color:var(--accent);margin-top:10px}.range{width:100%;padding:0;accent-color:var(--accent)}.empty{text-align:center;padding:45px 20px}.empty .wi{font-size:52px}.headline{margin:8px 0 20px}.primary{background:var(--accent);color:var(--bg);font-weight:650}.actions{display:flex;gap:10px;flex-wrap:wrap}.divider{margin:20px 0;border:0;border-top:1px solid var(--line)}.danger{color:var(--warn)}.modelbar{height:5px;border-radius:5px;background:var(--accent);margin:10px 0}.radarbox{position:relative;background:#d9e5eb;border-radius:15px;overflow:hidden;aspect-ratio:1;max-width:512px;margin:16px auto}.radarbox img{width:100%;position:absolute;inset:0}.radarbox .center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#163c56;color:white;border:2px solid white;border-radius:50%;width:12px;height:12px;z-index:3}.radarbox .compass{position:absolute;right:12px;top:10px;color:#132e42;z-index:3}.radarbox .gridlines{position:absolute;inset:0;background:linear-gradient(transparent 49.8%,#3453 50%,transparent 50.2%),linear-gradient(90deg,transparent 49.8%,#3453 50%,transparent 50.2%)}.footnote{font-size:13px;color:var(--muted);margin:14px 0}.nowrap{white-space:nowrap}@media(min-width:760px){.weather-columns{display:grid;grid-template-columns:1.15fr 1fr;gap:20px}.hero{padding-top:32px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.page{padding-top:24px}.temperature{font-size:120px}h1{font-size:32px}}@media(prefers-reduced-motion:no-preference){button{transition:background .15s,opacity .15s}.hero{animation:appear .4s ease-out}@keyframes appear{from{opacity:.3;transform:translateY(5px)}to{opacity:1;transform:none}}}
-</style></head><body data-theme="auto"><header><div><div class="brand">Alpenwetter</div><h1 id="locationTitle">Graz</h1></div><div class="header-actions"><button class="iconbutton" id="gps" aria-label="Use my location">⌖</button><button class="iconbutton" id="refresh" aria-label="Refresh weather">↻</button></div></header><div id="status" class="status" role="status" aria-live="polite">Opening your weather…</div><main class="page" id="main"></main><nav aria-label="Main navigation" id="nav"></nav>
+</style></head><body data-theme="auto"><header><div><div class="brand">Alpenwetter <span class="small">v1.2.0</span></div><h1 id="locationTitle">Graz</h1></div><div class="header-actions"><button class="iconbutton" id="gps" aria-label="Use my location">⌖</button><button class="iconbutton" id="refresh" aria-label="Refresh weather">↻</button></div></header><div id="status" class="status" role="status" aria-live="polite">Opening your weather…</div><main class="page" id="main"></main><nav aria-label="Main navigation" id="nav"></nav>
 <style>
 .radarbox .basemap{position:absolute;inset:0;overflow:hidden;background:#d9e5eb}
 .radarbox .basemap img{position:absolute;width:256px;height:256px;max-width:none;inset:auto;object-fit:cover}
@@ -114,4 +114,71 @@ $('gps').onclick=gps;$('refresh').onclick=()=>loadWeather(true);window.addEventL
 // Not enabled by default on authenticated hosting, to avoid caching access pages.
 if(new URLSearchParams(location.search).get('pwa')==='1'&&location.protocol==='https:'&&'serviceWorker'in navigator){const link=document.createElement('link');link.rel='manifest';link.href='./manifest.webmanifest';document.head.append(link);navigator.serviceWorker.register('./sw.js').catch(()=>status('Offline installation unavailable; core app still works.',true))}
 window.Alpen={normalize,consensus,weightedMedian,daily,Store,Provider,state,settings,loadWeather,cachedHistory,dateKey,saveSnapshots,cacheDiagnostics,validCache,radar,gps,selectLocation,hourstrip,radarImages,normalizeRadar};loadWeather();
+</script>
+<script>
+// v1.2 radar interaction hardening. This layer deliberately wraps the existing
+// renderer so the proven forecast/storage code remains unchanged during the
+// migration. It adds pinch zoom, cursor-centred zoom, playback and opacity.
+(function(){
+  const api=window.Alpen;
+  if(!api||!api.state)return;
+  const MIN_Z=5,MAX_Z=10;
+  const world=(lat,lon,z)=>{const n=2**z,r=Math.max(-85.0511,Math.min(85.0511,Number(lat)))*Math.PI/180;return{x:(Number(lon)+180)/360*n*256,y:(1-Math.asinh(Math.tan(r))/Math.PI)/2*n*256}};
+  const sizeOf=s=>s.clientWidth||512;
+  function zoomAt(map,box,clientX,clientY,next){
+    const size=sizeOf(box),rect=box.getBoundingClientRect(),px=clientX-rect.left,py=clientY-rect.top;
+    const old=world(api.state.location.latitude,api.state.location.longitude,map.z),oldView={x:old.x-map.panX,y:old.y-map.panY};
+    const wx=oldView.x+px-size/2,wy=oldView.y+py-size/2, nz=Math.max(MIN_Z,Math.min(MAX_Z,next));
+    if(nz===map.z)return;
+    const scale=2**(nz-map.z),center=world(api.state.location.latitude,api.state.location.longitude,nz);
+    map.z=nz;map.panX=center.x-(wx*scale-px+size/2);map.panY=center.y-(wy*scale-py+size/2);
+    api.radarImages();
+  }
+  function ensureControls(box,surface){
+    const parent=box.parentElement;if(!parent)return;
+    let controls=parent.querySelector('.radar-controls');
+    if(!controls){
+      controls=document.createElement('div');controls.className='radar-controls actions';controls.style.marginTop='10px';
+      controls.innerHTML='<button type="button" class="radar-play" aria-pressed="false">▶ Play</button><label class="radar-opacity" style="flex:1;min-width:170px">Overlay opacity <input type="range" min="0" max="100" value="76" class="range" aria-label="Radar overlay opacity"></label>';
+      box.after(controls);
+      const play=controls.querySelector('.radar-play');let timer=null;
+      play.onclick=()=>{const s=api.state;if(timer){clearInterval(timer);timer=null;play.textContent='▶ Play';play.setAttribute('aria-pressed','false');return}play.textContent='❚❚ Pause';play.setAttribute('aria-pressed','true');timer=setInterval(()=>{if(!s.radar?.frames?.length){clearInterval(timer);timer=null;return}s.radarIndex=(s.radarIndex+1)%s.radar.frames.length;api.radarImages()},900)};
+      controls.querySelector('input').oninput=e=>{const layer=surface.querySelector('.radar-tiles');if(layer)layer.style.opacity=String(Number(e.target.value)/100)};
+    }
+  }
+  function enhance(surface){
+    if(surface.dataset.v12Enhanced==='1')return;
+    surface.dataset.v12Enhanced='1';
+    let pointers=new Map(),drag=null;
+    const map=api.state.radarMap;
+    const render=()=>api.radarImages();
+    surface.onpointerdown=e=>{
+      if(e.target.closest('button'))return;
+      pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});surface.setPointerCapture?.(e.pointerId);
+      if(pointers.size===1){drag={x:e.clientX,y:e.clientY,px:map.panX,py:map.panY};surface.classList.add('dragging')}
+      else drag=null;
+    };
+    surface.onpointermove=e=>{
+      if(!pointers.has(e.pointerId))return;
+      pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(pointers.size===2){
+        const pts=[...pointers.values()],a=pts[0],b=pts[1],mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2},distance=Math.hypot(a.x-b.x,a.y-b.y);
+        if(!surface._pinch){surface._pinch={distance,zoom:map.z};return}
+        const delta=distance/surface._pinch.distance;
+        if(Math.abs(delta-1)>.015){const next=surface._pinch.zoom+(delta>1?1:-1);zoomAt(map,surface,mid.x,mid.y,next);surface._pinch={distance,zoom:map.z}}
+        return;
+      }
+      if(drag){map.panX=drag.px+e.clientX-drag.x;map.panY=drag.py+e.clientY-drag.y;render()}
+    };
+    surface.onpointerup=surface.onpointercancel=e=>{pointers.delete(e.pointerId);if(pointers.size<2)surface._pinch=null;if(!pointers.size){drag=null;surface.classList.remove('dragging')}};
+    surface.onwheel=e=>{e.preventDefault();zoomAt(map,surface,e.clientX,e.clientY,map.z+(e.deltaY<0?1:-1))};
+    const buttons=surface.querySelectorAll('.map-tools button');
+    if(buttons[0])buttons[0].onclick=()=>{map.z=Math.max(MIN_Z,map.z-1);render()};
+    if(buttons[1])buttons[1].onclick=()=>{map.z=Math.min(MAX_Z,map.z+1);render()};
+    if(buttons[2])buttons[2].onclick=()=>{map.panX=0;map.panY=0;render()};
+    ensureControls(surface.closest('.radarbox'),surface);
+  }
+  const observer=new MutationObserver(()=>{const surface=document.querySelector('.map-surface');if(surface){enhance(surface);ensureControls(surface.closest('.radarbox'),surface)}});
+  observer.observe(document.getElementById('main')||document.body,{subtree:true,childList:true});
+})();
 </script></body></html>

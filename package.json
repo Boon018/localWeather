@@ -5,7 +5,7 @@
   "description": "Local-first weather application for Austria",
   "type": "module",
   "scripts": {
-    "test": "node tests/test.cjs && node tests/regressions.cjs && node tests/modules.cjs",
+    "test": "node tests/test.cjs && node tests/regressions.cjs && node tests/modules.cjs && node tests/storage-compat.cjs",
     "build": "node scripts/build.mjs",
     "check:artifact": "node scripts/check-artifact.mjs",
     "test:browser": "playwright test"

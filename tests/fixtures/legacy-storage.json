@@ -1,0 +1,9 @@
+{
+  "alpen.v1.settings": {"theme":"dark","temperature":"celsius","wind":"kmh","precipitation":"mm","refresh":30,"defaultLocation":null},
+  "alpen.v1.location": {"name":"Graz","latitude":47.0707,"longitude":15.4395,"timezone":"Europe/Vienna"},
+  "alpen.v1.favorites": [{"name":"Graz","latitude":47.0707,"longitude":15.4395,"timezone":"Europe/Vienna"},{"name":"Vienna","latitude":48.2082,"longitude":16.3738,"timezone":"Europe/Vienna"}],
+  "alpen.v1.history:47.071,15.440:2025-09-09": {"savedAt":1757548800000,"date":"2025-09-09","timezone":"Europe/Vienna","rows":[{"time":1757376000,"temperature_2m":18,"precipitation":2.5}]},
+  "alpen.v1.warnings:47.071,15.440": {"savedAt":1757548800000,"name":"Graz","warnings":[]},
+  "alpen.v1.snapshots:47.071,15.440": [{"bucket":81367,"issued":1757548800000,"models":[{"id":"icon_seamless","rows":[{"time":1757635200,"temperature_2m":18,"precipitation":2.5}]}]}],
+  "alpen.v1.scores:47.071,15.440": {"savedAt":1758412800000,"models":{"icon_seamless":{"temperature_2m":{"n":1,"sum":1,"correct":0},"precipitation":{"n":1,"sum":0.1,"correct":0},"wind_speed_10m":{"n":0,"sum":0,"correct":0},"pressure_msl":{"n":0,"sum":0,"correct":0},"events":{"n":1,"sum":0,"correct":1}}}}
+}

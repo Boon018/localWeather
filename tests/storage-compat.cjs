@@ -1,0 +1,12 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const fixture=JSON.parse(fs.readFileSync(new URL('./fixtures/legacy-storage.json','file://'+__filename),'utf8'));
+const disk=new Map(Object.entries(fixture).map(([k,v])=>[k,JSON.stringify(v)]));
+const code=fs.readFileSync('dist/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+const element={dataset:{},setAttribute(){}};
+const ctx={console,Intl,Date,URL,URLSearchParams,AbortController,setTimeout,clearTimeout,setInterval(){},MutationObserver:class{observe(){}},navigator:{onLine:false},location:{protocol:'file:',search:''},window:{__ALPEN_TEST__:true,addEventListener(){}},document:{getElementById(){return element},body:{},addEventListener(){}},localStorage:{getItem:k=>disk.get(k)??null,setItem:(k,v)=>disk.set(k,v),removeItem:k=>disk.delete(k)}};
+vm.runInNewContext(code,ctx);
+for(const [k,v]of Object.entries(fixture))assert.equal(disk.get(k),JSON.stringify(v),'Upgrade rewrote '+k);
+assert.equal(ctx.window.Alpen.state.location.name,'Graz');
+assert.equal(ctx.window.Alpen.Store.get('favorites').length,2);
+assert.equal(ctx.window.Alpen.settings.theme,'dark');
+console.log('PASS: legacy settings, favorites, location, history, warnings, journal and scores survive startup byte-for-byte.');

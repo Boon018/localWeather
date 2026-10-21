@@ -1,5 +1,5 @@
 /* Optional independent-host PWA shell. Never caches weather requests or other origins. */
-const CACHE='alpen-shell-1.2.1-3d9d902d0623';
+const CACHE='alpen-shell-1.2.1-f5ce2bc54f6b';
 self.addEventListener('install',event=>event.waitUntil((async()=>{const cache=await caches.open(CACHE);for(const file of ['./index.html','./manifest.webmanifest','./icon.svg']){const url=new URL(file,self.registration.scope);const response=await fetch(url,{cache:'reload',redirect:'error'});if(!response.ok)throw Error('Shell unavailable');await cache.put(url,response)}await self.skipWaiting()})()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{for(const k of await caches.keys())if(k.startsWith('alpen-shell-')&&k!==CACHE)await caches.delete(k);await self.clients.claim()})()));
 self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(u.origin!==self.location.origin||event.request.method!=='GET')return;if(event.request.mode==='navigate'){event.respondWith(fetch(event.request).catch(()=>caches.match(new URL('./index.html',self.registration.scope))));return}if(['manifest.webmanifest','icon.svg'].some(f=>u.href===new URL(f,self.registration.scope).href))event.respondWith(caches.match(event.request).then(r=>r||fetch(event.request))) });

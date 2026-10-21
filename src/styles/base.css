@@ -10,6 +10,7 @@
   --warn: #ffd28b;
   --shadow: 0 10px 30px #00000016;
 }
+.weather-columns > div { min-width: 0; }
 * {
   box-sizing: border-box;
 }

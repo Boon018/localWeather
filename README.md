@@ -2,7 +2,19 @@
 
 # Alpenwetter 1.1 — local iPhone fixes (20 October 2026)
 
-Use the standalone `index.html` or the existing private HTTPS link. Main-screen search accepts a town/postcode or decimal `latitude, longitude` (for example `47.07, 15.44`). Saved places are selectable on the same screen. GPS remains subject to iPhone browser permissions; blocked/denied requests now give a visible fallback message and a bounded timeout.
+Use the standalone `index.html` or the public GitHub Pages URL after enabling Pages. Main-screen search accepts a town/postcode or decimal `latitude, longitude` (for example `47.07, 15.44`). Saved places are selectable on the same screen. GPS remains subject to iPhone browser permissions; blocked/denied requests now give a visible fallback message and a bounded timeout.
+
+## Public iPhone testing with GitHub Pages
+
+This repository includes `.github/workflows/pages.yml`, so every push to `main` can publish the root `index.html` as a normal HTTPS website. To turn it on once:
+
+1. Open the repository on GitHub and choose **Settings → Pages**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Wait for the workflow named **Deploy weather app to GitHub Pages** to finish.
+
+The shareable address will be `https://boon018.github.io/localWeather/`. Open that address in Safari, Firefox or Chrome on each device. No app install, account, API key or local file handling is needed. Each device keeps its own favorites and cached weather locally; only public weather/location requests leave the device.
+
+The repository must be public for an unrestricted public test link. If it remains private, GitHub may restrict who can view the Pages site depending on the account plan.
 
 Changes in this update:
 

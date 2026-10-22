@@ -5,10 +5,16 @@ import { loadWeather } from "../weather/forecast.js";
 import { status } from "../ui/status.js";
 import { $ } from "../ui/format.js";
 import { validLocation } from "../storage/validate.js";
+import { requestLocation } from "../api/geolocation.js";
+let cancelGPS = null;
 export function selectLocation(l) {
   if (!validLocation(l)) {
     locationMessage("This location is invalid. Choose another place.");
     return;
+  }
+  if (cancelGPS) {
+    cancelGPS();
+    cancelGPS = null;
   }
   state.locationEpoch++;
   state.historyRequest++;
@@ -39,70 +45,62 @@ export function locationMessage(text) {
   status(text, true);
   if ($("locationMessage")) $("locationMessage").textContent = text;
 }
-export async function gps() {
-  if (!navigator.geolocation) {
+export function gps() {
+  if (cancelGPS) cancelGPS();
+  if (!navigator.geolocation || location.protocol === "file:") {
     locationMessage(
-      "GPS is unavailable in this browser context. Use the location field or a saved place.",
+      "Location is unavailable here. Open the HTTPS app or search a town/postcode.",
     );
     return;
   }
-  locationMessage("Requesting your location…");
+  locationMessage(
+    "Requesting your location… Allow the location prompt; this can take up to a minute.",
+  );
   const request = ++state.gpsRequest,
     epoch = state.locationEpoch;
-  let finished = false;
-  const watchdog = setTimeout(() => {
-    if (
-      !finished &&
-      request === state.gpsRequest &&
-      epoch === state.locationEpoch
-    ) {
-      finished = true;
+  const current = () =>
+    request === state.gpsRequest && epoch === state.locationEpoch;
+  cancelGPS = requestLocation(
+    navigator.geolocation,
+    (p) => {
+      if (!current()) return;
+      cancelGPS = null;
+      selectLocation({
+        name:
+          "My location · " +
+          p.coords.latitude.toFixed(2) +
+          "°, " +
+          p.coords.longitude.toFixed(2) +
+          "°",
+        latitude: +p.coords.latitude.toFixed(4),
+        longitude: +p.coords.longitude.toFixed(4),
+        country: "",
+        timezone: "Europe/Vienna",
+      });
+    },
+    (e) => {
+      if (!current()) return;
+      cancelGPS = null;
+      const reason =
+        e.code === 1
+          ? "Location permission is denied."
+          : e.code === 3
+            ? "Location did not respond within a minute."
+            : "Your device could not obtain a location.";
       locationMessage(
-        "Location did not respond. Use the search field, or open the HTTPS app and allow location in iPhone settings.",
+        reason +
+          " On iPhone/iPad, check Settings → Privacy & Security → Location Services and location access for Safari Websites or Alpenwetter, if listed. If the Home Screen app shows no prompt, open this site in Safari and try the location button there. Then reopen Alpenwetter and retry. You can also search a postcode or saved place.",
+      );
+    },
+  );
+}
+if (typeof document.addEventListener === "function")
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && cancelGPS) {
+      cancelGPS();
+      cancelGPS = null;
+      locationMessage(
+        "Location request paused when the app was hidden. Tap the location button to retry.",
       );
     }
-  }, 14000);
-  const done = (fn) => (value) => {
-    if (
-      finished ||
-      request !== state.gpsRequest ||
-      epoch !== state.locationEpoch
-    )
-      return;
-    finished = true;
-    clearTimeout(watchdog);
-    fn(value);
-  };
-  try {
-    navigator.geolocation.getCurrentPosition(
-      done((p) =>
-        selectLocation({
-          name:
-            "My location · " +
-            p.coords.latitude.toFixed(2) +
-            "°, " +
-            p.coords.longitude.toFixed(2) +
-            "°",
-          latitude: +p.coords.latitude.toFixed(4),
-          longitude: +p.coords.longitude.toFixed(4),
-          country: "",
-          timezone: "Europe/Vienna",
-        }),
-      ),
-      done((e) =>
-        locationMessage(
-          e.code === 1
-            ? "Location permission was denied or blocked for this file. Search above, select a saved place, or use the HTTPS app."
-            : "Location could not be obtained. Search above or select a saved place.",
-        ),
-      ),
-      { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 },
-    );
-  } catch {
-    finished = true;
-    clearTimeout(watchdog);
-    locationMessage(
-      "This browser cannot request location here. Use the search field or a saved place.",
-    );
-  }
-}
+  });

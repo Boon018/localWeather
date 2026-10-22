@@ -1,5 +1,6 @@
 import { daily } from "../weather/consensus.js";
 import { json } from "./http.js";
+import { austrianPostcodeSearch } from './geocoding.js';
 export const CORE = [
   "temperature_2m",
   "precipitation",
@@ -71,6 +72,8 @@ export const Provider = {
     return json("https://api.open-meteo.com/v1/forecast", p);
   },
   async search(q) {
+    const local = austrianPostcodeSearch(q);
+    if (local !== null) return { results: local };
     return json("https://geocoding-api.open-meteo.com/v1/search", {
       name: q,
       count: 12,

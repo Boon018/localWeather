@@ -1,8 +1,11 @@
-# Alpenwetter v1.2.3
+# Alpenwetter v1.2.4
 
 [Open the app](https://boon018.github.io/localWeather/) · [Standalone HTML](https://boon018.github.io/localWeather/standalone.html)
 
 ## Current release
+
+Version 1.2.4 adds offline Austrian postcode lookup (2,501 GeoNames codes, including 8770 and its localities). Four-digit searches default to Austria; AT-8770 and 8770 Österreich also work. GPS now allows up to one minute, uses a bounded high-accuracy fallback, and reports iOS permission guidance in both location views. No OS permission bypass is possible; physical iOS PWA acceptance is still required.
+
 
 The authoritative source is now `src/`. Generated `index.html`, `dist/index.html` and `dist/standalone.html` contain the same bundled JavaScript and CSS; do not edit them manually. There are no runtime CDN scripts. End users need no development tools.
 

@@ -1,11 +1,11 @@
 {
   "name": "alpenwetter",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "private": true,
   "description": "Local-first weather application for Austria",
   "type": "module",
   "scripts": {
-    "test": "node tests/test.cjs && node tests/regressions.cjs && node tests/modules.cjs && node tests/storage-compat.cjs && node tests/radar.mjs && node tests/validation.mjs",
+    "test": "node tests/test.cjs && node tests/regressions.cjs && node tests/modules.cjs && node tests/storage-compat.cjs && node tests/radar.mjs && node tests/validation.mjs && node tests/geolocation.mjs",
     "build": "node scripts/build.mjs",
     "check:artifact": "node scripts/check-artifact.mjs",
     "test:browser": "playwright test"

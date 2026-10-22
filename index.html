@@ -12,7 +12,7 @@
       name="description"
       content="Private, local-first weather for Austria. Forecasts, model comparisons and historical weather."
     />
-    <meta name="alpenwetter-version" content="1.2.4" />
+    <meta name="alpenwetter-version" content="1.2.5" />
     <title>Alpenwetter</title>
     <style>
       :root {
@@ -626,13 +626,19 @@ label {
   }
 }
 
+#locationHelp { width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow: auto; padding: 24px; border: 1px solid var(--line); border-radius: 24px; background: var(--card); color: var(--text); }
+#locationHelp::backdrop { background: rgba(0, 15, 30, .7); }
+#locationHelp li { margin: 12px 0; line-height: 1.5; }
+#locationHelp .help-link { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 0; }
+#locationHelp details { margin: 16px 0; }
+
     </style>
-  <meta name="alpenwetter-build" content="fef925a68765"></head>
+  <meta name="alpenwetter-build" content="d403856c105e"></head>
   <body data-theme="auto">
     <header>
       <div>
         <div class="brand">
-          Alpenwetter <span class="small">v1.2.4</span>
+          Alpenwetter <span class="small">v1.2.5</span>
         </div>
         <h1 id="locationTitle">Graz</h1>
       </div>
@@ -649,6 +655,25 @@ label {
     </div>
     <main class="page" id="main"></main>
     <nav aria-label="Main navigation" id="nav"></nav>
+    <dialog id="locationHelp" aria-labelledby="locationHelpTitle" aria-describedby="locationHelpReason">
+      <h2 id="locationHelpTitle">Enable your location</h2>
+      <p id="locationHelpReason">Follow these steps, then tap Try location again.</p>
+      <p>The browser controls the permission prompt. If access is denied, Alpenwetter cannot force a new prompt or change your settings.</p>
+      <h3>On iPhone or iPad</h3>
+      <ol>
+        <li>Open <strong>Settings → Privacy &amp; Security → Location Services</strong> and turn Location Services on.</li>
+        <li>In that list, check <strong>Safari Websites</strong> (and <strong>Alpenwetter</strong>, if listed). Allow access while using it. German labels: <strong>Datenschutz &amp; Sicherheit → Ortungsdienste → Safari-Websites → Beim Verwenden der App</strong>.</li>
+        <li>Open this site in <strong>Safari</strong>. Open the page menu beside the address bar, then <strong>Website Settings → Location → Ask or Allow</strong>. You may need to tap <strong>…</strong> first. German: <strong>Website-Einstellungen → Standort → Fragen oder Erlauben</strong>.</li>
+        <li>Tap the location button in Safari. If that works, reopen the Home Screen app and retry there. Browser and installed-app permissions may differ.</li>
+      </ol>
+      <p class="footnote">There is no supported direct iOS Settings link available to this web app. Open Settings manually. The browser link below opens a new window; if it stays inside the app, copy the address into Safari.</p>
+      <div class="actions">
+        <a class="help-link" href="https://boon018.github.io/localWeather/?location-help=1" target="_blank" rel="noopener noreferrer">Open in browser ↗</a>
+        <a class="help-link" href="https://support.apple.com/de-at/102647" target="_blank" rel="noopener noreferrer">Apple’s location settings guide ↗</a>
+      </div>
+      <details><summary>Android or desktop browser</summary><p>Open the browser’s site permissions for this address and allow Location. Also check your device’s location privacy settings, then retry.</p></details>
+      <div class="actions"><button data-action="retryGPS">Try location again</button><button data-action="closeLocationHelp">Use postcode instead</button></div>
+    </dialog>
 
     <script>
       (() => {
@@ -876,11 +901,11 @@ label {
     const fav = Store.get("favorites", []);
     return '<section class="card location-controls"><form id="searchForm"><input id="searchInput" placeholder="Town, postcode or lat, lon" minlength="2" required aria-label="Location search" autocomplete="off"><button type="submit">Find</button></form><div id="searchMessage" role="status"></div><div id="searchResults">' + searchResults() + '</div><div class="actions"><select id="savedLocation" aria-label="Saved locations" style="flex:1;min-width:0"><option value="">Saved places' + (fav.length ? "" : " \xB7 none yet") + "</option>" + fav.map((l, i) => '<option value="' + i + '">' + esc(l.name) + "</option>").join("") + '</select><button data-action="favorite">Save place</button></div><p class="footnote" id="locationMessage" role="status">' + esc(
       state.gpsMessage || (location.protocol === "file:" ? "Local file: if GPS is unavailable, search above or choose a saved place." : "")
-    ) + "</p></section>";
+    ) + '</p><button data-action="locationHelp">Location help</button></section>';
   }
   function locationsView() {
     const fav = Store.get("favorites", []);
-    return '<h2 class="headline">Your places</h2><section class="card"><button data-action="gps" style="width:100%">\u2316 Use my current location</button><form id="searchForm"><input id="searchInput" placeholder="Town, city or postcode" minlength="2" required autocomplete="off" aria-label="Search locations"><button>Search</button></form><div id="searchMessage" role="status"></div><div id="searchResults">' + searchResults() + '</div><p id="locationMessage" role="status" class="footnote">' + esc(state.gpsMessage || "") + '</p><p class="footnote">Location is requested only when you tap the button. Coordinates are sent to weather providers to retrieve your weather.</p></section><section class="card"><div class="sectionhead"><h2>Saved locations</h2><button data-action="favorite">Save current</button></div>' + (fav.length ? fav.map(
+    return '<h2 class="headline">Your places</h2><section class="card"><button data-action="gps" style="width:100%">\u2316 Use my current location</button><form id="searchForm"><input id="searchInput" placeholder="Town, city or postcode" minlength="2" required autocomplete="off" aria-label="Search locations"><button>Search</button></form><div id="searchMessage" role="status"></div><div id="searchResults">' + searchResults() + '</div><p id="locationMessage" role="status" class="footnote">' + esc(state.gpsMessage || "") + '</p><button data-action="locationHelp">Location help</button><p class="footnote">Location is requested only when you tap the button. Coordinates are sent to weather providers to retrieve your weather.</p></section><section class="card"><div class="sectionhead"><h2>Saved locations</h2><button data-action="favorite">Save current</button></div>' + (fav.length ? fav.map(
       (l, i) => '<div class="locationrow"><button class="selectloc" data-fav="' + i + '">' + esc(l.name) + "<br><small>" + esc(l.country || "") + '</small></button><button data-delete="' + i + '" aria-label="Delete ' + esc(l.name) + '">\xD7</button></div>'
     ).join("") : '<p class="muted">Save places to switch between them quickly.</p>') + '</section><section class="card"><h3>Quick start \xB7 Austria</h3>' + [
       { ...DEFAULT },
@@ -2131,7 +2156,7 @@ label {
   }
 
   // src/app/version.js
-  var APP_VERSION = false ? "development" : "1.2.4";
+  var APP_VERSION = false ? "development" : "1.2.5";
 
   // src/ui/settingsView.js
   function settingSelect(id, label, opts, value) {
@@ -2345,6 +2370,18 @@ label {
     return cancel;
   }
 
+  // src/ui/locationHelp.js
+  function showLocationHelp(reason = "Follow these steps, then tap Try location again.") {
+    const dialog = $("locationHelp");
+    if (!dialog || typeof dialog.showModal !== "function") return;
+    $("locationHelpReason").textContent = reason;
+    if (!dialog.open) dialog.showModal();
+  }
+  function closeLocationHelp() {
+    const dialog = $("locationHelp");
+    if (dialog && typeof dialog.close === "function") dialog.close();
+  }
+
   // src/app/location.js
   var cancelGPS = null;
   function selectLocation(l) {
@@ -2386,6 +2423,7 @@ label {
     if ($("locationMessage")) $("locationMessage").textContent = text;
   }
   function gps() {
+    closeLocationHelp();
     if (cancelGPS) cancelGPS();
     if (!navigator.geolocation || location.protocol === "file:") {
       locationMessage(
@@ -2398,10 +2436,12 @@ label {
     );
     const request = ++state.gpsRequest, epoch = state.locationEpoch;
     const current = () => request === state.gpsRequest && epoch === state.locationEpoch;
-    cancelGPS = requestLocation(
+    let pending2 = true;
+    const cancel = requestLocation(
       navigator.geolocation,
       (p) => {
         if (!current()) return;
+        pending2 = false;
         cancelGPS = null;
         selectLocation({
           name: "My location \xB7 " + p.coords.latitude.toFixed(2) + "\xB0, " + p.coords.longitude.toFixed(2) + "\xB0",
@@ -2413,13 +2453,16 @@ label {
       },
       (e) => {
         if (!current()) return;
+        pending2 = false;
         cancelGPS = null;
         const reason = e.code === 1 ? "Location permission is denied." : e.code === 3 ? "Location did not respond within a minute." : "Your device could not obtain a location.";
         locationMessage(
-          reason + " On iPhone/iPad, check Settings \u2192 Privacy & Security \u2192 Location Services and location access for Safari Websites or Alpenwetter, if listed. If the Home Screen app shows no prompt, open this site in Safari and try the location button there. Then reopen Alpenwetter and retry. You can also search a postcode or saved place."
+          reason + " Open Location help for iOS/Safari settings, or search a postcode."
         );
+        showLocationHelp(reason);
       }
     );
+    cancelGPS = pending2 ? cancel : null;
   }
   if (typeof document.addEventListener === "function")
     document.addEventListener("visibilitychange", () => {
@@ -2600,6 +2643,12 @@ label {
       );
     const a = b.dataset.action;
     if (a === "gps") gps();
+    if (a === "locationHelp") showLocationHelp(state.gpsMessage || void 0);
+    if (a === "retryGPS") gps();
+    if (a === "closeLocationHelp") {
+      closeLocationHelp();
+      $("searchInput")?.focus();
+    }
     if (a === "cacheTest") $("cacheReport").innerHTML = cacheReport();
     if (a === "favorite") {
       const fav = Store.get("favorites", []);
@@ -2685,6 +2734,7 @@ label {
     normalizeRadar
   };
   if (!window.__ALPEN_TEST__) loadWeather();
+  if (!window.__ALPEN_TEST__ && new URLSearchParams(location.search).get("location-help") === "1") showLocationHelp();
 })();
 
     </script>

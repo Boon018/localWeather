@@ -15,6 +15,7 @@ import { normalize } from "./weather/normalize.js";
 import { consensus, weightedMedian, daily } from "./weather/consensus.js";
 import { Provider } from "./api/openMeteo.js";
 import { hourstrip } from "./ui/components.js";
+import { showLocationHelp, closeLocationHelp } from './ui/locationHelp.js';
 document.addEventListener("click", (e) => {
   const b = e.target.closest("button");
   if (!b) return;
@@ -59,6 +60,9 @@ document.addEventListener("click", (e) => {
     );
   const a = b.dataset.action;
   if (a === "gps") gps();
+  if (a === 'locationHelp') showLocationHelp(state.gpsMessage || undefined);
+  if (a === 'retryGPS') gps();
+  if (a === 'closeLocationHelp') { closeLocationHelp(); $('searchInput')?.focus(); }
   if (a === "cacheTest") $("cacheReport").innerHTML = cacheReport();
   if (a === "favorite") {
     const fav = Store.get("favorites", []);
@@ -165,3 +169,4 @@ window.Alpen = {
   normalizeRadar,
 };
 if (!window.__ALPEN_TEST__) loadWeather();
+if (!window.__ALPEN_TEST__ && new URLSearchParams(location.search).get('location-help') === '1') showLocationHelp();

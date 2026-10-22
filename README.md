@@ -1,8 +1,11 @@
-# Alpenwetter v1.2.4
+# Alpenwetter v1.2.5
 
 [Open the app](https://boon018.github.io/localWeather/) · [Standalone HTML](https://boon018.github.io/localWeather/standalone.html)
 
 ## Current release
+
+Version 1.2.5 opens an accessible help dialog after a location failure, with separate iOS/Safari permission instructions, Apple help, a browser link and explicit retry. Location help is also available without requesting GPS. The app cannot force an OS prompt after denial or deep-link to its iOS Location settings. Physical installed-app permission recovery remains a manual device check.
+
 
 Version 1.2.4 adds offline Austrian postcode lookup (2,501 GeoNames codes, including 8770 and its localities). Four-digit searches default to Austria; AT-8770 and 8770 Österreich also work. GPS now allows up to one minute, uses a bounded high-accuracy fallback, and reports iOS permission guidance in both location views. No OS permission bypass is possible; physical iOS PWA acceptance is still required.
 

@@ -56,4 +56,30 @@ test("permission denied gives actionable PWA help in Places", async ({
     "Location permission is denied",
   );
   await expect(page.locator("#locationMessage")).toContainText("Safari");
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('link', {name:'Open in browser'})).toHaveAttribute('target','_blank');
+  await expect(page.getByRole('link', {name:'Apple’s location settings guide'})).toHaveAttribute('href','https://support.apple.com/de-at/102647');
+  await page.getByRole('button',{name:'Use postcode instead'}).click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.locator('#searchInput')).toBeFocused();
+});
+test('location help opens without requesting GPS and retry can recover',async({page})=>{
+ await page.setViewportSize({width:320,height:640});
+ await page.addInitScript(()=>{
+   window.locationCalls=0;
+   Object.defineProperty(navigator,'geolocation',{value:{getCurrentPosition(ok,fail){
+     window.locationCalls++;
+     if(window.locationCalls===1) fail({code:1});
+     else ok({coords:{latitude:47.3384,longitude:15.0178}});
+   }}});
+ });
+ await page.goto('./?location-help=1');
+ await expect(page.getByRole('dialog')).toBeVisible();
+ expect(await page.evaluate(()=>window.locationCalls)).toBe(0);
+ expect(await page.locator('#locationHelp').evaluate(el=>el.getBoundingClientRect().right)).toBeLessThanOrEqual(320);
+ await page.getByRole('button',{name:'Try location again'}).click();
+ await expect(page.locator('#locationHelpReason')).toHaveText('Location permission is denied.');
+ await page.getByRole('button',{name:'Try location again'}).click();
+ await expect(page.getByRole('dialog')).not.toBeVisible();
+ await expect.poll(()=>page.evaluate(()=>window.Alpen.state.location.latitude)).toBe(47.3384);
 });

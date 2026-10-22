@@ -19,7 +19,7 @@ export function locationControls() {
           ? "Local file: if GPS is unavailable, search above or choose a saved place."
           : ""),
     ) +
-    "</p></section>"
+    '</p><button data-action="locationHelp">Location help</button></section>'
   );
 }
 export function locationsView() {
@@ -27,7 +27,9 @@ export function locationsView() {
   return (
     '<h2 class="headline">Your places</h2><section class="card"><button data-action="gps" style="width:100%">⌖ Use my current location</button><form id="searchForm"><input id="searchInput" placeholder="Town, city or postcode" minlength="2" required autocomplete="off" aria-label="Search locations"><button>Search</button></form><div id="searchMessage" role="status"></div><div id="searchResults">' +
     searchResults() +
-    '</div><p id="locationMessage" role="status" class="footnote">' + esc(state.gpsMessage || '') + '</p><p class="footnote">Location is requested only when you tap the button. Coordinates are sent to weather providers to retrieve your weather.</p></section><section class="card"><div class="sectionhead"><h2>Saved locations</h2><button data-action="favorite">Save current</button></div>' +
+    '</div><p id="locationMessage" role="status" class="footnote">' +
+    esc(state.gpsMessage || "") +
+    '</p><button data-action="locationHelp">Location help</button><p class="footnote">Location is requested only when you tap the button. Coordinates are sent to weather providers to retrieve your weather.</p></section><section class="card"><div class="sectionhead"><h2>Saved locations</h2><button data-action="favorite">Save current</button></div>' +
     (fav.length
       ? fav
           .map(
@@ -66,16 +68,21 @@ export function locationsView() {
   );
 }
 export function searchResults() {
-  return (state.search.some(l => l.postcode) ? '<p class="footnote">Approximate locality coordinates · Austrian postcodes: <a href="https://www.geonames.org/" target="_blank" rel="noopener">GeoNames</a> · CC BY 4.0</p>' : '') + state.search
-    .map(
-      (l, i) =>
-        '<button class="selectloc" style="width:100%;text-align:left;margin-top:8px" data-search="' +
-        i +
-        '">' +
-        esc(l.name) +
-        "<br><small>" +
-        esc([l.admin1, l.country].filter(Boolean).join(", ")) +
-        "</small></button>",
-    )
-    .join("");
+  return (
+    (state.search.some((l) => l.postcode)
+      ? '<p class="footnote">Approximate locality coordinates · Austrian postcodes: <a href="https://www.geonames.org/" target="_blank" rel="noopener">GeoNames</a> · CC BY 4.0</p>'
+      : "") +
+    state.search
+      .map(
+        (l, i) =>
+          '<button class="selectloc" style="width:100%;text-align:left;margin-top:8px" data-search="' +
+          i +
+          '">' +
+          esc(l.name) +
+          "<br><small>" +
+          esc([l.admin1, l.country].filter(Boolean).join(", ")) +
+          "</small></button>",
+      )
+      .join("")
+  );
 }

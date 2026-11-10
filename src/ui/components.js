@@ -1,4 +1,4 @@
-import { esc, time, condition, temp, rain, finite, fmt } from "./format.js";
+import { esc, time, forecastCondition, temp, rain, finite, fmt } from "./format.js";
 import { state } from "../app/state.js";
 export function metric(label, value, detail = "") {
   return (
@@ -25,7 +25,7 @@ export function hourstrip(rows) {
           '<div class="hour"><small>' +
           esc(time(r.time)) +
           '</small><span class="wi">' +
-          condition(r.weather_code, r.is_day)[0] +
+          forecastCondition(r)[0] +
           "</span><strong>" +
           temp(r.temperature_2m) +
           '</strong><small class="blue" title="Total precipitation in the hour ending at this time">' +

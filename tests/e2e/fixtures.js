@@ -18,7 +18,7 @@ function forecast() {
     },
   };
 }
-export async function providers(page) {
+export async function providers(page, adjustForecast = (data) => data) {
   await page.route("https://**/*", async (route) => {
     const u = new URL(route.request().url());
     let body;
@@ -29,7 +29,7 @@ export async function providers(page) {
               { name: "Vienna", latitude: 48.2082, longitude: 16.3738 },
             ],
           }
-        : forecast();
+        : adjustForecast(forecast(), u);
     else if (u.hostname.includes("warnungen"))
       body = {
         properties: {

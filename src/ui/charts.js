@@ -2,7 +2,7 @@ import { state } from "../app/state.js";
 import {
   esc,
   time,
-  condition,
+  forecastCondition,
   temp,
   rain,
   direction,
@@ -100,7 +100,7 @@ export function tableHTML(rows) {
             }),
           ) +
           "</td><td>" +
-          condition(r.weather_code, r.is_day)[0] +
+          forecastCondition(r)[0] +
           "</td>" +
           cols
             .map(

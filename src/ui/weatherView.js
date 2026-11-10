@@ -2,9 +2,10 @@ import { state, settings } from "../app/state.js";
 import { locationControls } from "./locationsView.js";
 import { empty, upcoming, hourstrip, metric } from "./components.js";
 import { daily } from "../weather/consensus.js";
+import { currentDisplayRow, dailyDisplayRow } from '../weather/conditions.js';
 import {
   dateKey,
-  condition,
+  forecastCondition,
   time,
   temp,
   esc,
@@ -31,7 +32,7 @@ export function weatherView() {
     c = data.current || h,
     days = daily(data.rows),
     today = days.find((d) => d.date === dateKey(Date.now() / 1000)) || days[0],
-    co = condition(c.weather_code, c.is_day);
+    co = forecastCondition(data.current ? currentDisplayRow(c, data.rows) : c);
   const ai =
     data.astro?.time?.findIndex((t) => dateKey(t) === today?.date) ?? -1;
   return (
@@ -54,7 +55,7 @@ export function weatherView() {
       : "Hourly consensus estimate") +
     '</div></section><section class="card"><div class="sectionhead"><h2>Next 24 hours</h2><button data-view="hourly">Details</button></div>' +
     hourstrip(rs.slice(0, 24)) +
-    "<small>Temperature & rainfall amount: consensus. Conditions & probability: Open-Meteo Best Match.</small></section>" +
+    "<small>Temperature & rainfall amount: consensus. Probability: Open-Meteo Best Match. Ordinary rain icons are replaced by sky conditions when precipitation is below 0.05 mm and chance below 40%.</small></section>" +
     warningsCard() +
     '<section class="card"><div class="sectionhead"><h2>Weather radar</h2><button data-action="radar">' +
     (state.radarBusy ? "Loading…" : state.radar ? "Refresh" : "Load radar") +
@@ -73,7 +74,7 @@ export function weatherView() {
               : time(d.time, { weekday: "short", day: "numeric" }),
           ) +
           "</span><span>" +
-          condition(d.code)[0] +
+          forecastCondition(dailyDisplayRow(d))[0] +
           '</span><div><div class="bar"></div><small class="blue">' +
           rain(d.precip) +
           '</small></div><span class="daytemp"><span class="muted">' +

@@ -1,8 +1,10 @@
-# Alpenwetter v1.2.5
+# Alpenwetter v1.2.6
 
 [Open the app](https://boon018.github.io/localWeather/) · [Standalone HTML](https://boon018.github.io/localWeather/standalone.html)
 
 ## Current release
+
+Version 1.2.6 reconciles ordinary rain/drizzle icons with displayed precipitation: below 0.05 mm and below 40% probability, use cloud conditions instead. The rule covers hourly cards/tables, daily summaries and the current estimate (using its own interval amount). Missing inputs retain the provider icon; freezing precipitation, snow and thunderstorms remain intact. This is a display rule, not a change to forecast amounts, probabilities or model weights. Raw cached weather codes stay unchanged.
 
 Version 1.2.5 opens an accessible help dialog after a location failure, with separate iOS/Safari permission instructions, Apple help, a browser link and explicit retry. Location help is also available without requesting GPS. The app cannot force an OS prompt after denial or deep-link to its iOS Location settings. Physical installed-app permission recovery remains a manual device check.
 

@@ -12,7 +12,7 @@
       name="description"
       content="Private, local-first weather for Austria. Forecasts, model comparisons and historical weather."
     />
-    <meta name="alpenwetter-version" content="1.2.5" />
+    <meta name="alpenwetter-version" content="1.2.6" />
     <title>Alpenwetter</title>
     <style>
       :root {
@@ -633,12 +633,12 @@ label {
 #locationHelp details { margin: 16px 0; }
 
     </style>
-  <meta name="alpenwetter-build" content="51b64e3cfb51"></head>
+  <meta name="alpenwetter-build" content="d7e9f6acae52"></head>
   <body data-theme="auto">
     <header>
       <div>
         <div class="brand">
-          Alpenwetter <span class="small">v1.2.5</span>
+          Alpenwetter <span class="small">v1.2.6</span>
         </div>
         <h1 id="locationTitle">Graz</h1>
       </div>
@@ -844,6 +844,43 @@ label {
     warnings: null
   };
 
+  // src/weather/conditions.js
+  var ordinaryRain = /* @__PURE__ */ new Set([51, 53, 55, 61, 63, 65, 80, 81, 82]);
+  function displayWeatherCode(row = {}) {
+    const {
+      weather_code: code,
+      precipitation: amount,
+      precipitation_probability: probability,
+      cloud_cover: cloud
+    } = row;
+    if (!ordinaryRain.has(code) || !Number.isFinite(amount) || amount < 0 || amount >= 0.05 || !Number.isFinite(probability) || probability < 0 || probability >= 40)
+      return code;
+    if (!Number.isFinite(cloud) || cloud < 0 || cloud > 100) return 3;
+    return cloud < 10 ? 0 : cloud < 30 ? 1 : cloud < 80 ? 2 : 3;
+  }
+  function currentDisplayRow(current, rows2) {
+    if (!Number.isFinite(current?.time)) return current;
+    const nearest = rows2.filter(
+      (r) => Number.isFinite(r.time) && Math.abs(r.time - current.time) <= 3600
+    ).reduce(
+      (a, b) => !a || Math.abs(b.time - current.time) < Math.abs(a.time - current.time) ? b : a,
+      null
+    );
+    return {
+      ...current,
+      precipitation_probability: nearest?.precipitation_probability
+    };
+  }
+  function dailyDisplayRow(day) {
+    const clouds = day.rows.map((r) => r.cloud_cover).filter((v) => Number.isFinite(v) && v >= 0 && v <= 100);
+    return {
+      weather_code: day.code,
+      precipitation: day.precip,
+      precipitation_probability: day.prob,
+      cloud_cover: clouds.length ? clouds.reduce((a, b) => a + b, 0) / clouds.length : null
+    };
+  }
+
   // src/ui/format.js
   var $ = (id) => document.getElementById(id);
   var finite = (v) => typeof v === "number" && Number.isFinite(v);
@@ -898,6 +935,12 @@ label {
     if (c <= 86) return ["\u{1F328}\uFE0F", "Snow showers"];
     return ["\u26C8\uFE0F", "Thunderstorm"];
   }
+  function forecastCondition(row = {}) {
+    const code = displayWeatherCode(row);
+    if (code !== row.weather_code && (!finite(row.cloud_cover) || row.cloud_cover < 0 || row.cloud_cover > 100))
+      return ["\u2601\uFE0F", "Mostly dry"];
+    return condition(code, row.is_day);
+  }
 
   // src/ui/locationsView.js
   function locationControls() {
@@ -936,7 +979,7 @@ label {
   }
   function hourstrip(rows2) {
     return '<div class="hourstrip">' + rows2.map(
-      (r) => '<div class="hour"><small>' + esc(time(r.time)) + '</small><span class="wi">' + condition(r.weather_code, r.is_day)[0] + "</span><strong>" + temp(r.temperature_2m) + '</strong><small class="blue" title="Total precipitation in the hour ending at this time">' + rain(r.precipitation) + '/h</small><small style="display:block">' + (finite(r.precipitation_probability) ? fmt(r.precipitation_probability) + "% chance" : "Chance \u2014") + "</small></div>"
+      (r) => '<div class="hour"><small>' + esc(time(r.time)) + '</small><span class="wi">' + forecastCondition(r)[0] + "</span><strong>" + temp(r.temperature_2m) + '</strong><small class="blue" title="Total precipitation in the hour ending at this time">' + rain(r.precipitation) + '/h</small><small style="display:block">' + (finite(r.precipitation_probability) ? fmt(r.precipitation_probability) + "% chance" : "Chance \u2014") + "</small></div>"
     ).join("") + "</div>";
   }
   function empty() {
@@ -1781,12 +1824,12 @@ label {
   function weatherView() {
     if (!state.data)
       return locationControls() + empty() + '<section class="card"><h2>Weather radar</h2><button data-action="radar">Load radar</button>' + radarContent() + "</section>";
-    const data = state.data, rs = upcoming(), h = rs[0] || {}, c = data.current || h, days = daily(data.rows), today = days.find((d) => d.date === dateKey(Date.now() / 1e3)) || days[0], co = condition(c.weather_code, c.is_day);
+    const data = state.data, rs = upcoming(), h = rs[0] || {}, c = data.current || h, days = daily(data.rows), today = days.find((d) => d.date === dateKey(Date.now() / 1e3)) || days[0], co = forecastCondition(data.current ? currentDisplayRow(c, data.rows) : c);
     const ai = data.astro?.time?.findIndex((t) => dateKey(t) === today?.date) ?? -1;
-    return locationControls() + '<div class="weather-columns"><div><section class="hero"><div class="condition-icon">' + co[0] + '</div><div class="temperature">' + temp(c.temperature_2m) + '</div><div class="condition">' + co[1] + '</div><p class="muted">Feels like ' + temp(c.apparent_temperature) + " \xB7 H " + temp(today?.high) + " / L " + temp(today?.low) + '</p><div class="pill">' + (data.current ? "Current model estimate \xB7 " + time(c.time) : "Hourly consensus estimate") + '</div></section><section class="card"><div class="sectionhead"><h2>Next 24 hours</h2><button data-view="hourly">Details</button></div>' + hourstrip(rs.slice(0, 24)) + "<small>Temperature & rainfall amount: consensus. Conditions & probability: Open-Meteo Best Match.</small></section>" + warningsCard() + '<section class="card"><div class="sectionhead"><h2>Weather radar</h2><button data-action="radar">' + (state.radarBusy ? "Loading\u2026" : state.radar ? "Refresh" : "Load radar") + "</button></div>" + radarContent() + '</section></div><div><section class="card days"><div class="sectionhead"><h2>' + days.length + '-day outlook</h2><span class="tag">Tap a day</span></div>' + days.map(
+    return locationControls() + '<div class="weather-columns"><div><section class="hero"><div class="condition-icon">' + co[0] + '</div><div class="temperature">' + temp(c.temperature_2m) + '</div><div class="condition">' + co[1] + '</div><p class="muted">Feels like ' + temp(c.apparent_temperature) + " \xB7 H " + temp(today?.high) + " / L " + temp(today?.low) + '</p><div class="pill">' + (data.current ? "Current model estimate \xB7 " + time(c.time) : "Hourly consensus estimate") + '</div></section><section class="card"><div class="sectionhead"><h2>Next 24 hours</h2><button data-view="hourly">Details</button></div>' + hourstrip(rs.slice(0, 24)) + "<small>Temperature & rainfall amount: consensus. Probability: Open-Meteo Best Match. Ordinary rain icons are replaced by sky conditions when precipitation is below 0.05 mm and chance below 40%.</small></section>" + warningsCard() + '<section class="card"><div class="sectionhead"><h2>Weather radar</h2><button data-action="radar">' + (state.radarBusy ? "Loading\u2026" : state.radar ? "Refresh" : "Load radar") + "</button></div>" + radarContent() + '</section></div><div><section class="card days"><div class="sectionhead"><h2>' + days.length + '-day outlook</h2><span class="tag">Tap a day</span></div>' + days.map(
       (d, i) => '<details><summary class="dayrow"><span>' + esc(
         d.date === dateKey(Date.now() / 1e3) ? "Today" : time(d.time, { weekday: "short", day: "numeric" })
-      ) + "</span><span>" + condition(d.code)[0] + '</span><div><div class="bar"></div><small class="blue">' + rain(d.precip) + '</small></div><span class="daytemp"><span class="muted">' + temp(d.low) + "</span> " + temp(d.high) + '</span></summary><div class="dayextra"><p>Rain chance ' + fmt(d.prob) + "% \xB7 Wind " + wind(d.wind) + " \xB7 Gusts " + wind(d.gust) + '</p><p class="footnote">' + (i >= 7 ? "Long-range trend: lower confidence. " : "") + (d.complete ? "" : "Partial day. ") + "Daily rain chance is the maximum hourly probability.</p>" + hourstrip(d.rows) + "</div></details>"
+      ) + "</span><span>" + forecastCondition(dailyDisplayRow(d))[0] + '</span><div><div class="bar"></div><small class="blue">' + rain(d.precip) + '</small></div><span class="daytemp"><span class="muted">' + temp(d.low) + "</span> " + temp(d.high) + '</span></summary><div class="dayextra"><p>Rain chance ' + fmt(d.prob) + "% \xB7 Wind " + wind(d.wind) + " \xB7 Gusts " + wind(d.gust) + '</p><p class="footnote">' + (i >= 7 ? "Long-range trend: lower confidence. " : "") + (d.complete ? "" : "Partial day. ") + "Daily rain chance is the maximum hourly probability.</p>" + hourstrip(d.rows) + "</div></details>"
     ).join("") + '</section></div></div><section class="card"><div class="sectionhead"><h2>At a glance</h2><small>Current model / nearest hour</small></div><div class="grid">' + metric(
       "Rain chance",
       fmt(h.precipitation_probability) + "%",
@@ -1861,7 +1904,7 @@ label {
           hour: "2-digit",
           minute: "2-digit"
         })
-      ) + "</td><td>" + condition(r.weather_code, r.is_day)[0] + "</td>" + cols.map(
+      ) + "</td><td>" + forecastCondition(r)[0] + "</td>" + cols.map(
         ([k]) => "<td>" + esc(
           k.includes("temperature") ? temp(r[k]) : ["precipitation", "rain"].includes(k) ? rain(r[k]) + "/h" : k === "wind_direction_10m" ? direction(r[k]) : k.startsWith("wind_") ? wind(r[k]) : fmt(
             r[k],
@@ -2159,7 +2202,7 @@ label {
   }
 
   // src/app/version.js
-  var APP_VERSION = false ? "development" : "1.2.5";
+  var APP_VERSION = false ? "development" : "1.2.6";
 
   // src/ui/settingsView.js
   function settingSelect(id, label, opts, value) {

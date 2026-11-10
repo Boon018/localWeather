@@ -1,4 +1,5 @@
 import { settings, state } from "../app/state.js";
+import { displayWeatherCode } from "../weather/conditions.js";
 export const $ = (id) => document.getElementById(id);
 export const finite = (v) => typeof v === "number" && Number.isFinite(v);
 export const esc = (v) =>
@@ -78,4 +79,13 @@ export function condition(c, day = 1) {
   if (c <= 82) return ["🌦️", "Rain showers"];
   if (c <= 86) return ["🌨️", "Snow showers"];
   return ["⛈️", "Thunderstorm"];
+}
+export function forecastCondition(row = {}) {
+  const code = displayWeatherCode(row);
+  if (
+    code !== row.weather_code &&
+    (!finite(row.cloud_cover) || row.cloud_cover < 0 || row.cloud_cover > 100)
+  )
+    return ["☁️", "Mostly dry"];
+  return condition(code, row.is_day);
 }

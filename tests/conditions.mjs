@@ -73,6 +73,15 @@ assert.equal(
   61,
 );
 assert.equal(dry.weather_code, 61);
+assert.equal(
+  displayWeatherCode(
+    currentDisplayRow({ ...current, time: 12700, precipitation: 0 }, [
+      { ...dry, time: 10000 },
+      { ...dry, time: 13600, precipitation_probability: 80 },
+    ]),
+  ),
+  3,
+);
 console.log(
   "PASS: dry/low-probability rain icons, thresholds, missing values, hazardous codes and current/daily interval handling.",
 );

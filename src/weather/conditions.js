@@ -24,22 +24,20 @@ export function displayWeatherCode(row = {}) {
 }
 export function currentDisplayRow(current, rows) {
   if (!Number.isFinite(current?.time)) return current;
-  const nearest = rows
+  const hour = rows
     .filter(
-      (r) => Number.isFinite(r.time) && Math.abs(r.time - current.time) <= 3600,
+      (r) =>
+        Number.isFinite(r.time) &&
+        r.time <= current.time &&
+        current.time - r.time < 3600,
     )
-    .reduce(
-      (a, b) =>
-        !a || Math.abs(b.time - current.time) < Math.abs(a.time - current.time)
-          ? b
-          : a,
-      null,
-    );
+    .reduce((a, b) => (!a || b.time > a.time ? b : a), null);
   // Use the current interval's own amount, never replace it with a dry hourly
-  // consensus. Probability is the nearest hour estimate, as shown in the UI.
+  // consensus. Use the current hour, matching the displayed probability; a
+  // wetter following hour must not leak into the current condition late in an hour.
   return {
     ...current,
-    precipitation_probability: nearest?.precipitation_probability,
+    precipitation_probability: hour?.precipitation_probability,
   };
 }
 export function dailyDisplayRow(day) {

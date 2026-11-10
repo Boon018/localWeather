@@ -1,5 +1,5 @@
 // Optional app shell only. No weather, radar, geocoding or personal data caching.
-const CACHE = "alpen-shell-1.2.6-d7e9f6acae52"; // replaced with version + content digest by build
+const CACHE = "alpen-shell-1.2.6-30ecf67520d3"; // replaced with version + content digest by build
 const root = new URL("./", self.registration.scope);
 const shell = new URL("./index.html", root).href;
 self.addEventListener("install", (event) =>

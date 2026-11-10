@@ -633,7 +633,7 @@ label {
 #locationHelp details { margin: 16px 0; }
 
     </style>
-  <meta name="alpenwetter-build" content="d7e9f6acae52"></head>
+  <meta name="alpenwetter-build" content="30ecf67520d3"></head>
   <body data-theme="auto">
     <header>
       <div>
@@ -860,15 +860,12 @@ label {
   }
   function currentDisplayRow(current, rows2) {
     if (!Number.isFinite(current?.time)) return current;
-    const nearest = rows2.filter(
-      (r) => Number.isFinite(r.time) && Math.abs(r.time - current.time) <= 3600
-    ).reduce(
-      (a, b) => !a || Math.abs(b.time - current.time) < Math.abs(a.time - current.time) ? b : a,
-      null
-    );
+    const hour = rows2.filter(
+      (r) => Number.isFinite(r.time) && r.time <= current.time && current.time - r.time < 3600
+    ).reduce((a, b) => !a || b.time > a.time ? b : a, null);
     return {
       ...current,
-      precipitation_probability: nearest?.precipitation_probability
+      precipitation_probability: hour?.precipitation_probability
     };
   }
   function dailyDisplayRow(day) {
